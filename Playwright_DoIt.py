@@ -10,27 +10,30 @@ import random
 import tkinter as tk
 
 
-user = '' 
-password = ''
+user = 
+password = 
 
 def Login(page): 
     page.goto("https://portal.ustraveldocs.com/?language=Chinese%20(Simplified)&country=China")
     page.get_by_label("电子邮件").click()
     page.get_by_label("电子邮件").fill(user)
-    time.sleep(2)
+    time.sleep(1)
     page.get_by_label("密码").click()
     page.get_by_label("密码").fill(password)
-    time.sleep(2)
+    time.sleep(1)
     page.get_by_label("*我已经阅读并理解 隐私政策").check()
     time.sleep(1)
     page.get_by_role("button", name="登陆").click()   
     time.sleep(3)  
     #page.get_by_text("重新预约").click()
     page.get_by_text("继续").click()
-    time.sleep(30) 
+    time.sleep(3) 
+    page.get_by_role("button", name="确认").click()   
+    time.sleep(3) 
+    page.get_by_role("button", name="继续").click() 
+    time.sleep(3)
 
-
-def modify_post_request(route, request,time_list):
+def modify_post_request(route, request,time_list,func):
     # 获取原始请求的payload参数
     payload =  request.post_data
     # 判断是否为需要拦截的POST请求数据
@@ -38,9 +41,11 @@ def modify_post_request(route, request,time_list):
     
       # 修改指定字段的值
       #  payload_dict['selectedDate'] = '01/31/2024'
-
-        #date = "01%2F30%2F2024"
-        date = random.choice(time_list)
+        #date = "01%2F30%2F2024"   
+        #date = random.choice(time_list)
+        time_len = len(time_list)
+        count = func() % time_len
+        date = time_list[count]
         print('select date',date.replace('%2F', '/'))
         # 使用正则表达式匹配 selectedDate 的值，并将其替换为新的值
         payload = re.sub(r'(selectedDate=)[^&]+', r'\g<1>' + date, payload)
@@ -100,33 +105,77 @@ def PlayMusic():
   print(name,'playing...')
 
 
-def run(playwright: Playwright,time_list) -> None:
-    browser = playwright.chromium.launch(headless=False)
-    context = browser.new_context()
-    page = context.new_page()
+def my_function():
+    static_var = -1
+    def increment_static_var():
+          nonlocal static_var
+          static_var += 1
+          return static_var
+    return increment_static_var
+
+
+
+#403
+#<label class="ctp-checkbox-label"><input type="checkbox"><span class="mark"></span><span class="ctp-label">确认您是真人</span></label>
+
+def response_event(response,page):
+   if(response.status == 403):
+       # try:
+            page.wait_for_event('domcontentloaded')     
+            page.wait_for_timeout(10*1000)
+            if page.solve_screenshot_challenge():
+             print("已通过安全挑战")
+            else:
+              print("未通过安全挑战")
+               # 选择嵌套的 iframe 元素
+           # iframe_locator = page.locator("iframe")
+            # 查找 iframe 元素的 ElementHandle 对象
+           # iframe_element = iframe_locator.element_handle()
+           # page2 = iframe_element.content_frame()
+           # print(page2.content())
+           # checkbox_element = iframe.page.evaluate(f"document.querySelector('input[type=checkbox]')")
+          #  checkbox_element = page2.locator('input[type=checkbox]')
+          #  checkbox_element.click()
+       # except:
+        #   print('response_event 403,not find checkbox!!!')
+
+
+def run(page,time_list) -> None:
+   # page = context.new_page()
     js = """
         Object.defineProperties(navigator, {webdriver:{get:()=>undefined}});
         """
     page.add_init_script(js)
+     # 监听响应事件
+    page.on("response", lambda response: response_event(response,page))
     Login(page)
-    page.route('https://portal.ustraveldocs.com/scheduleappointment',lambda route: modify_post_request(route,route.request,time_list))
+    func = my_function()
+    page.route('https://portal.ustraveldocs.com/scheduleappointment',lambda route: modify_post_request(route,route.request,time_list,func))
 
+
+    waitTime = 0
+    refreshTime = int(random.uniform(120, 150))
     while( True):
       page.get_by_role("link", name="30").click()  
-      random_number = int(random.uniform(30, 60))
-      print('wait',random_number,'s')
+      random_number = int(random.uniform(30, 40))
+      waitTime += random_number
+      print('random time',random_number,'s')
       time.sleep(random_number)
       if(parse_html(page.content())):
          page.unroute('https://portal.ustraveldocs.com/scheduleappointment')
          PlayMusic()
-         break
-
+         break   
+      print('waitTime:',waitTime,"refreshTime:",refreshTime)
+      if waitTime >= refreshTime:     
+        print('refresh page')
+        page.reload()  
+        waitTime = 0
+        refreshTime = int(random.uniform(120, 150))
 
     time.sleep(1000)
     # ---------------------
     page.close()
-    context.close()
-    browser.close()
+
 
 
 
@@ -134,7 +183,21 @@ def run(playwright: Playwright,time_list) -> None:
 
 with sync_playwright() as playwright:
     time_list = pase_date('2023-11-20','2023-11-30')
-    run(playwright,time_list)
+    browser = playwright.chromium.launch(headless=False)
+    context = browser.new_context()
+    while(True):
+      try:
+        page = context.new_page()
+        run(page,time_list)
+      except:
+        print('errpr except!')
+        page.close()
+      time.sleep(3)
+
+    
+
+    context.close()
+    browser.close()
 
 
   #1) <a href="#" class="ui-state-default">30</a> aka get_by_role("link", name="30")
