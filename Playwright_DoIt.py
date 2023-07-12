@@ -2,19 +2,47 @@ import datetime
 import json
 import re
 import sys
-from playwright.sync_api import Playwright, sync_playwright, expect
+from playwright.sync_api import Playwright, sync_playwright
 import time
 import pygame
 import os
 import random
-import tkinter as tk
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
 
 
 user = 
 password = 
+IP_LIMIT_FLAG = False
+
+body = '内容'
+def SendMail():
+  # 邮件发送方的邮箱地址和邮箱密码
+  sender_email = 'SenGeMail@163.com'
+  sender_password = 'TKTHLXRKIFHWZRXY'
+  # 邮件接收方的邮箱地址
+  recipient_email = '734697554@qq.com'
+  # 邮件主题和内容
+  subject = '邮件通知'
+
+  # 创建 MIMEMultipart 对象，用于组合邮件主体和附件
+
+  message = MIMEMultipart()
+  message['Subject'] = subject
+  message['From'] = sender_email
+  message['To'] = recipient_email
+  # 添加邮件正文
+  global body
+  message.attach(MIMEText(body))
+  with smtplib.SMTP_SSL('smtp.163.com', 465) as server:
+    server.login(sender_email, sender_password)
+    server.sendmail(sender_email, recipient_email, message.as_string())
 
 def Login(page): 
     page.goto("https://portal.ustraveldocs.com/?language=Chinese%20(Simplified)&country=China")
+    page.wait_for_load_state('networkidle', timeout=30000)
     page.get_by_label("电子邮件").click()
     page.get_by_label("电子邮件").fill(user)
     time.sleep(1)
@@ -62,7 +90,9 @@ def modify_post_request(route, request,time_list,func):
 def parse_html(html):
       com = re.compile('<input type="checkbox" name="thePage:SiteTemplate:theForm.*?<td>(.*?)</td><td>(.*?)</td><td>(\d+)</td>',re.S)
       result = re.findall(com,html)
+      global body
       if(len(result) > 0):
+        body = result
         for date_str in result:
           print(date_str)
         return True
@@ -119,25 +149,33 @@ def my_function():
 #<label class="ctp-checkbox-label"><input type="checkbox"><span class="mark"></span><span class="ctp-label">确认您是真人</span></label>
 
 def response_event(response,page):
+
    if(response.status == 403):
-       # try:
+        print('response_vent,url',response.url)
+        try:
             page.wait_for_event('domcontentloaded')     
             page.wait_for_timeout(10*1000)
-            if page.solve_screenshot_challenge():
-             print("已通过安全挑战")
-            else:
-              print("未通过安全挑战")
+       
                # 选择嵌套的 iframe 元素
-           # iframe_locator = page.locator("iframe")
+            iframe_locator = page.locator("iframe")
             # 查找 iframe 元素的 ElementHandle 对象
-           # iframe_element = iframe_locator.element_handle()
-           # page2 = iframe_element.content_frame()
+            iframe_element = iframe_locator.element_handle()
+            page2 = iframe_element.content_frame()
            # print(page2.content())
+            ckeckbox = page2.locator('input[type=checkbox]')
+            ckeckbox.check()
+            print('response_event, check checkbox')
            # checkbox_element = iframe.page.evaluate(f"document.querySelector('input[type=checkbox]')")
-          #  checkbox_element = page2.locator('input[type=checkbox]')
+
           #  checkbox_element.click()
-       # except:
-        #   print('response_event 403,not find checkbox!!!')
+        except:
+           print('response_event 403,not find checkbox!!!')
+   elif(response.status == 429):
+      global IP_LIMIT_FLAG
+      IP_LIMIT_FLAG = True
+      print('IP limit!!!')
+      
+
 
 
 def run(page,time_list) -> None:
@@ -156,19 +194,27 @@ def run(page,time_list) -> None:
     waitTime = 0
     refreshTime = int(random.uniform(120, 150))
     while( True):
-      page.get_by_role("link", name="30").click()  
+      if(IP_LIMIT_FLAG):
+         sys.exit()
+
+      page.get_by_role("link", name="31").hover()  
+      page.get_by_role("link", name="31").click()  
       random_number = int(random.uniform(30, 40))
       waitTime += random_number
       print('random time',random_number,'s')
       time.sleep(random_number)
       if(parse_html(page.content())):
-         page.unroute('https://portal.ustraveldocs.com/scheduleappointment')
-         PlayMusic()
-         break   
+        try:
+          page.unroute('https://portal.ustraveldocs.com/scheduleappointment')
+          SendMail()
+          PlayMusic()
+        except:
+          print('nothing')
+        break   
       print('waitTime:',waitTime,"refreshTime:",refreshTime)
       if waitTime >= refreshTime:     
-        print('refresh page')
-        page.reload()  
+       # print('refresh page')
+       # page.reload()  
         waitTime = 0
         refreshTime = int(random.uniform(120, 150))
 
