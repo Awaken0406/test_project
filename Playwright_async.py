@@ -14,10 +14,10 @@ async def main():
         #await page.goto(url)
 
         # 使用 CloudFlare Scraper 获取 CloudFlare 网站的真实内容
-        content = await scraper.get(url)
+        content =  scraper.get(url).content
 
         # 将获取到的内容设置到 Playwright 的页面中
-        await page.set_content(content)
+        await page.set_content(content.decode('utf-8'))
 
         # 在页面上执行一些操作，如点击、输入等
         #await page.click('#button')
