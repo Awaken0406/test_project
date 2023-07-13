@@ -13,8 +13,8 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 
 
-user = 
-password = 
+user = '' 
+password = ''
 IP_LIMIT_FLAG = False
 
 body = '内容'
@@ -154,20 +154,18 @@ def response_event(response,page):
         print('response_vent,url',response.url)
         try:
             page.wait_for_event('domcontentloaded')     
-            page.wait_for_timeout(10*1000)
+            page.wait_for_timeout(7*1000)
        
-               # 选择嵌套的 iframe 元素
+            # 选择嵌套的 iframe 元素
             iframe_locator = page.locator("iframe")
             # 查找 iframe 元素的 ElementHandle 对象
             iframe_element = iframe_locator.element_handle()
-            page2 = iframe_element.content_frame()
-           # print(page2.content())
+            page2 = iframe_element.content_frame()          
             ckeckbox = page2.locator('input[type=checkbox]')
             ckeckbox.check()
             print('response_event, check checkbox')
-           # checkbox_element = iframe.page.evaluate(f"document.querySelector('input[type=checkbox]')")
-
-          #  checkbox_element.click()
+            #locator = page.frame_locator("#my-iframe").get_by_text("Submit")
+           
         except:
            print('response_event 403,not find checkbox!!!')
    elif(response.status == 429):
@@ -194,12 +192,15 @@ def run(page,time_list) -> None:
     waitTime = 0
     refreshTime = int(random.uniform(120, 150))
     while( True):
-      if(IP_LIMIT_FLAG):
-         sys.exit()
-
-      page.get_by_role("link", name="31").hover()  
-      page.get_by_role("link", name="31").click()  
-      random_number = int(random.uniform(30, 40))
+      #<td class=" " onclick="DP_jQuery_1689243664265.datepicker._selectDay('#datepicker',1,2024, this);return false;"><a class="ui-state-default" href="#">20</a></td>
+      link_elements = page.query_selector_all('td[onclick*="DP_jQuery_"]')   
+      for link in link_elements:
+        if(link.is_enabled()):
+           link.hover() 
+           link.click()
+           break
+           
+      random_number = int(random.uniform(50, 80))
       waitTime += random_number
       print('random time',random_number,'s')
       time.sleep(random_number)
@@ -211,7 +212,7 @@ def run(page,time_list) -> None:
         except:
           print('nothing')
         break   
-      print('waitTime:',waitTime,"refreshTime:",refreshTime)
+      #print('waitTime:',waitTime,"refreshTime:",refreshTime)
       if waitTime >= refreshTime:     
        # print('refresh page')
        # page.reload()  
@@ -234,11 +235,17 @@ with sync_playwright() as playwright:
     while(True):
       try:
         page = context.new_page()
-        run(page,time_list)
+        run(page,time_list)   
       except:
         print('errpr except!')
         page.close()
-      time.sleep(3)
+
+      if(IP_LIMIT_FLAG):
+        print('IP limit Stop !!!')
+        break
+      waitStart = int(random.uniform(120,180))
+      print(f'waiting {waitStart}s start...')
+      time.sleep(waitStart)
 
     
 
