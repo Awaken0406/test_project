@@ -13,9 +13,10 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 
 
-user = '' 
-password = ''
-IP_LIMIT_FLAG = False
+user = 'q3448129631@126.com' 
+password = 'Qwe1937852'
+LIMIT_FLAG_IP = False
+LIMIT_FLAG_VISIT = False
 
 body = '内容'
 def SendMail():
@@ -39,6 +40,69 @@ def SendMail():
   with smtplib.SMTP_SSL('smtp.163.com', 465) as server:
     server.login(sender_email, sender_password)
     server.sendmail(sender_email, recipient_email, message.as_string())
+
+
+
+def parse_html(html):
+
+      com = re.compile('<input type="checkbox" name="thePage:SiteTemplate:theForm.*?<td>(.*?)</td><td>(.*?)</td><td>(\d+)</td>',re.S)
+      result = re.findall(com,html)
+      global body
+      if(len(result) > 0):
+        body = result
+        for date_str in result:
+          print(date_str)
+        return True
+      
+      global LIMIT_FLAG_VISIT
+      c = re.compile('明日重置',re.S)
+      s = re.search(c,html)
+      if(s != None):
+        LIMIT_FLAG_VISIT = True
+        print("visit limit !!!")
+        return False
+      return False
+
+
+
+def pase_date(from_date,to_date):
+  from_obj = datetime.datetime.strptime(from_date, "%Y-%m-%d")
+  to_obj = datetime.datetime.strptime(to_date, "%Y-%m-%d")
+
+  start_date = datetime.date(from_obj.year, from_obj.month, from_obj.day)
+  end_date = datetime.date(to_obj.year, to_obj.month, to_obj.day)
+  delta = end_date - start_date
+  if(delta.days <= 0):
+     print('date error!!!')
+     sys.exit()
+
+  time_list =[]
+  for i in range(delta.days):
+      date = start_date + datetime.timedelta(days=i)
+      date_str = date.strftime("%m/%d/%Y")
+      date_str = date_str.replace('/', '%2F')
+      time_list.append(date_str)
+  return time_list
+      
+
+
+def PlayMusic():
+  dir_path = 'D:/Users/chenyongsen/Music/'
+  file_names = [f for f in os.listdir(dir_path) if not f.startswith('!!!')]
+  pygame.init()
+  name = random.choice(file_names)
+  pygame.mixer.music.load(dir_path + name)
+  pygame.mixer.music.play()
+  print(name,'playing...')
+
+
+def my_function():
+    static_var = -1
+    def increment_static_var():
+          nonlocal static_var
+          static_var += 1
+          return static_var
+    return increment_static_var
 
 def Login(page): 
     page.goto("https://portal.ustraveldocs.com/?language=Chinese%20(Simplified)&country=China")
@@ -87,64 +151,6 @@ def modify_post_request(route, request,time_list,func):
 
 
 
-def parse_html(html):
-      com = re.compile('<input type="checkbox" name="thePage:SiteTemplate:theForm.*?<td>(.*?)</td><td>(.*?)</td><td>(\d+)</td>',re.S)
-      result = re.findall(com,html)
-      global body
-      if(len(result) > 0):
-        body = result
-        for date_str in result:
-          print(date_str)
-        return True
-      return False
-
-
-
-def pase_date(from_date,to_date):
-  from_obj = datetime.datetime.strptime(from_date, "%Y-%m-%d")
-  to_obj = datetime.datetime.strptime(to_date, "%Y-%m-%d")
-
-  start_date = datetime.date(from_obj.year, from_obj.month, from_obj.day)
-  end_date = datetime.date(to_obj.year, to_obj.month, to_obj.day)
-  delta = end_date - start_date
-  if(delta.days <= 0):
-     print('date error!!!')
-     sys.exit()
-
-  time_list =[]
-  for i in range(delta.days):
-      date = start_date + datetime.timedelta(days=i)
-      date_str = date.strftime("%m/%d/%Y")
-      date_str = date_str.replace('/', '%2F')
-      time_list.append(date_str)
-  return time_list
-      
-
-
-   
-
-   
-
-def PlayMusic():
-  dir_path = 'D:/Users/chenyongsen/Music/'
-  file_names = [f for f in os.listdir(dir_path) if not f.startswith('!!!')]
-  pygame.init()
-  name = random.choice(file_names)
-  pygame.mixer.music.load(dir_path + name)
-  pygame.mixer.music.play()
-  print(name,'playing...')
-
-
-def my_function():
-    static_var = -1
-    def increment_static_var():
-          nonlocal static_var
-          static_var += 1
-          return static_var
-    return increment_static_var
-
-
-
 #403
 #<label class="ctp-checkbox-label"><input type="checkbox"><span class="mark"></span><span class="ctp-label">确认您是真人</span></label>
 
@@ -166,11 +172,11 @@ def response_event(response,page):
             print('response_event, check checkbox')
             #locator = page.frame_locator("#my-iframe").get_by_text("Submit")
            
-        except:
-           print('response_event 403,not find checkbox!!!')
+        except Exception as e:
+           print('response_event 403,not find checkbox!!!',e)
    elif(response.status == 429):
-      global IP_LIMIT_FLAG
-      IP_LIMIT_FLAG = True
+      global LIMIT_FLAG_IP
+      LIMIT_FLAG_IP = True
       print('IP limit!!!')
       
 
@@ -209,8 +215,8 @@ def run(page,time_list) -> None:
           page.unroute('https://portal.ustraveldocs.com/scheduleappointment')
           SendMail()
           PlayMusic()
-        except:
-          print('nothing')
+        except Exception as e:
+          print('nothing',e)
         break   
       #print('waitTime:',waitTime,"refreshTime:",refreshTime)
       if waitTime >= refreshTime:     
@@ -236,23 +242,25 @@ with sync_playwright() as playwright:
       try:
         page = context.new_page()
         run(page,time_list)   
-      except:
-        print('errpr except!')
+      except TimeoutError as e:
+        print(f"TimeoutError: {e}")
         page.close()
+      except Exception as e:
+        print(f"An error occurred: {e}")
+        page.close()     
 
-      if(IP_LIMIT_FLAG):
+
+      if(LIMIT_FLAG_IP):
         print('IP limit Stop !!!')
         break
+      if(LIMIT_FLAG_VISIT):
+        print('visit limit Stop !!!')
+        break
       waitStart = int(random.uniform(120,180))
-      print(f'waiting {waitStart}s start...')
+      print(f'waiting {waitStart}s ...')
       time.sleep(waitStart)
 
     
 
     context.close()
     browser.close()
-
-
-  #1) <a href="#" class="ui-state-default">30</a> aka get_by_role("link", name="30")
-  #  2) <span class="ui-state-default">30</span> aka get_by_role("row", name="24 25 26 27 28 29 30").get_by_text("30")
-  #  3) <td>08:30</td> aka get_by_role("cell", name="08:30")
