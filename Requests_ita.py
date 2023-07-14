@@ -62,12 +62,12 @@ reservation_headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
 }
 
-response = requests.get(reservation_url, headers=reservation_headers)
-print('reservation',response.status_code)
+#response = requests.get(reservation_url, headers=reservation_headers)
+#print('reservation',response.status_code)
 #print('reservation',response.text)
-if(response.status_code != 200):
-    sys.exit()
-time.sleep(3)
+#if(response.status_code != 200):
+#    sys.exit()
+#time.sleep(3)
 
 
 
