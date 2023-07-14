@@ -13,8 +13,8 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 
 
-user = 'q3448129631@126.com' 
-password = 'Qwe1937852'
+user = 
+password = 
 LIMIT_FLAG_IP = False
 LIMIT_FLAG_VISIT = False
 
