@@ -5,6 +5,7 @@ import datetime
 
 import pickle
 from datetime import date
+#https://github.com/tporadowski/redis/releases
 
 response = """        var myDayHash = new Array();
             myDayHash['16-1-2023'] = true;
