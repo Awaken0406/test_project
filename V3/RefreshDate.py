@@ -91,7 +91,7 @@ def response_event(response,page):
       LIMIT_FLAG_IP = True
       logger.info('IP limit!!!')
    elif(response.status == 200 and 
-        ('https://portal.ustraveldocs.com/scheduleappointment' in response.url or 'https://portal.ustraveldocs.com/applicanthome' in response.url)):
+        ('https://portal.ustraveldocs.com/scheduleappointment' in response.url)):
       text = response.text()
       global redisdb
       # 匹配日期字符串
@@ -101,10 +101,11 @@ def response_event(response,page):
       for date in date_list:
         time = datetime.datetime.strptime(date, "%d-%m-%Y")
         logger.info("%s",time.date())
-        list.append(time.date())
+        list.append(str(time.date()))
       if(len(list) > 0):
-        serialized_dates = pickle.dumps(list)
-        redisdb.set('date',serialized_dates)
+        #serialized_dates = pickle.dumps(list)
+        redisdb.set('date',str(list))
+        logger.info('写入日期')
         global FINISH
         FINISH = True
 
@@ -133,7 +134,7 @@ def run(page,account,password):
 
 
 def read_config():
-    with open('D:/code/V3/refresh_config.ini','r') as f:
+    with open('./refresh_config.ini','r') as f:
         info = f.read()
     my_list = eval(info)
     list = []
@@ -155,7 +156,7 @@ def init_log():
 
 
 # 创建文件 handler
-  file_handler = logging.FileHandler('message.log')
+  file_handler = logging.FileHandler('refresh_date_log.log')
   file_handler.setLevel(logging.DEBUG)
 
 # 指定日志记录格式
@@ -210,7 +211,7 @@ if __name__ == "__main__":
       page = context.new_page()
       run(page,data.account,data.password)      
       page.close()
-
+      FINISH = False
       if(LIMIT_FLAG_IP):
         logger.info('IP limit Stop !!!')
         PlayMusic('提醒.mp3')
