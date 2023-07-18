@@ -1,3 +1,4 @@
+import ast
 import datetime
 import re
 import sys
@@ -29,6 +30,7 @@ WAIT_BASE = 30
 DATE_LIST = []
 redisdb = StrictRedis(host='localhost',port=6379,db=0,password=None)
 DB_KEY = 'date'
+FINISH = False
 
 def check_html(html):   
     global LIMIT_FLAG_VISIT
@@ -137,8 +139,8 @@ def response_event(response,page):
       global LIMIT_FLAG_IP
       LIMIT_FLAG_IP = True
       logger.info('IP limit!!!')
-   elif(response.status == 200 and
-            ('https://portal.ustraveldocs.com/scheduleappointment' in response.url or 'https://portal.ustraveldocs.com/applicanthome' in response.url)):
+   elif(response.status == 200 and 'https://portal.ustraveldocs.com/scheduleappointment' in response.url):
+    try:
       text = response.text()
       global DATE_LIST
       global redisdb
@@ -149,11 +151,16 @@ def response_event(response,page):
       for date in date_list:
         time = datetime.datetime.strptime(date, "%d-%m-%Y")
         logger.info("%s",time.date())
-        list.append(time.date())
+        list.append(str(time.date()))
         DATE_LIST.append(time.date())
       if(len(list) > 0):
-        serialized_dates = pickle.dumps(list)
-        redisdb.set(DB_KEY,serialized_dates)
+        #serialized_dates = pickle.dumps(list)
+        redisdb.set(DB_KEY,str(list))
+        logger.info('写入日期')
+        global FINISH
+        FINISH = True
+    except Exception as e:
+       logger.info('error print date,%s',e)
 
 
 #检查时间
@@ -164,11 +171,12 @@ def check_time(html,data:CAccountClass):
     result = re.findall(com,html)
     for date_str in result:
         date_obj = datetime.datetime.strptime(date_str[1], '%A %B %d, %Y')
+        date_obj = date_obj.date()
         if date_obj >= data.start and date_obj <= data.end:
-            logger.info('%s',f'恭喜:"{data.account}"抢到号!!!,时间{date_obj.date()}')
+            logger.info('%s',f'恭喜:"{data.account}"抢到号!!!,时间{date_obj}')
             return 1
         if date_obj < data.start:
-            logger.info('有更早的日期:%s',date_obj.date())
+            logger.info('有更早的日期:%s',date_obj)
             return 2
     return 0
 
@@ -250,7 +258,10 @@ def run(page,data:CAccountClass,list) -> None:
         else:
             PlayMusic('提醒.mp3')
             time.sleep(10000)
-         
+    count = 10
+    while(FINISH == False and count > 0):
+        time.sleep(3) 
+        count -= 1 
     check_html(html)      
    
 
@@ -258,7 +269,7 @@ def run(page,data:CAccountClass,list) -> None:
 
 
 def read_config():
-    with open('D:/code/V3/config.ini', 'r') as f:
+    with open('./config.ini', 'r') as f:
         g_config = f.read()
 
 
@@ -308,13 +319,15 @@ def init_log():
 def check_redis_data(list):
    global redisdb
    global DB_KEY
-   serialized_dates = redisdb.get(DB_KEY)
-   if serialized_dates == None:
+   date_list_str = redisdb.get(DB_KEY).decode('utf-8') 
+   if date_list_str == None:
         return False,None,None
    
-   date_list = pickle.loads(serialized_dates)
+   date_list = ast.literal_eval(date_list_str)
    for account_data in list:
-      for date in date_list:
+      for d in date_list:
+         date = datetime.datetime.strptime(d, "%Y-%m-%d")
+         date = date.date()
          if date >= account_data.start and date <= account_data.end:
             return True,account_data,date
          
@@ -352,7 +365,7 @@ if __name__ == "__main__":
       TRY_DATE = None
       DATE_LIST.clear()
       find_db_data = False
-
+      FINISH = False
       if(LIMIT_FLAG_IP):
         logger.info('IP limit Stop !!!')
         PlayMusic('提醒.mp3')
