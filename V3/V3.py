@@ -18,7 +18,7 @@ class CAccountClass:
       self.start = start
       self.end = end
       self.confirmCount = count
-      self.effective = True
+
 
 #新增监听响应并获取日期，并选择日期
 
@@ -201,7 +201,7 @@ def check_date(page,data:CAccountClass):
           
       
 #确认时间
-def Confirm(page,data:CAccountClass,list):
+def Confirm(page,data:CAccountClass):
     try:
         link_elements = page.query_selector_all('input[type="checkbox"][name*="thePage:SiteTemplate:theForm:"]')   
         for link in reversed(link_elements):
@@ -210,7 +210,7 @@ def Confirm(page,data:CAccountClass,list):
         time.sleep(1) 
         if(data.confirmCount == 0):
            page.get_by_role("button", name="安排面谈时间").click()
-           list.remove(data)  
+            
         PlayMusic('星辰大海.mp3')
         time.sleep(10000)
     except Exception as e:
@@ -218,7 +218,7 @@ def Confirm(page,data:CAccountClass,list):
         logger.info('other error %s',e)
         time.sleep(300)
 
-def run(page,data:CAccountClass,list) -> None:
+def run(page,data:CAccountClass) -> None:
    # page = context.new_page()
     js = """
         Object.defineProperties(navigator, {webdriver:{get:()=>undefined}});
@@ -239,7 +239,7 @@ def run(page,data:CAccountClass,list) -> None:
     html = page.content()
     ret = check_time(html,data)
     if(ret == 1): #有就直接确认  
-        Confirm(page,data,list)
+        Confirm(page,data)
         logger.info('流程1')
     elif(ret == 2): 
         while(len(DATE_LIST) <= 0):
@@ -254,11 +254,11 @@ def run(page,data:CAccountClass,list) -> None:
             s = check_time(html,data)
             if(s == 1):
                 logger.info('流程4')
-                Confirm(page,data,list)
+                Confirm(page,data)
         else:
             PlayMusic('提醒.mp3')
             time.sleep(10000)
-    count = 10
+    count = 2
     while(FINISH == False and count > 0):
         time.sleep(3) 
         count -= 1 
@@ -273,20 +273,20 @@ def read_config():
         g_config = f.read()
 
 
-    date_pattern = re.compile("{(.*?)}",re.S)
-    date_list = date_pattern.findall(g_config)
-
-    list = []
-    for item in date_list:
-        item = item.replace("'", "")
-        account, password,start,end,count = item.split(':')
-        strat_obj = datetime.datetime.strptime(start, "%Y-%m-%d")
-        end_obj = datetime.datetime.strptime(end, "%Y-%m-%d")
-        if(strat_obj > end_obj):
-            logger.info('时间区间错误date error!!!')
-            sys.exit()
-        list.append(CAccountClass(account,password,strat_obj.date(),end_obj.date(),int(count)))
-    return list
+    config = ast.literal_eval(g_config)
+    account =   config['account']
+    password = config['password']
+    count = config['count']
+    start = datetime.datetime.strptime(config['start'], "%Y-%m-%d").date()
+    end = datetime.datetime.strptime(config['end'], "%Y-%m-%d").date()
+    
+    data = CAccountClass(account,password,start,end,int(count))
+    for attribute, value in vars(data).items():
+      logging.info("%s: %s",attribute, value)
+    if(start > end):
+        logger.info('时间区间错误date error!!!')
+        sys.exit()
+    return data
   
 
 
@@ -316,7 +316,7 @@ def init_log():
   logger.addHandler(file_handler)
 
 
-def check_redis_data(list):
+def check_redis_data(data:CAccountClass):
    global redisdb
    global DB_KEY
    date_list_str = redisdb.get(DB_KEY).decode('utf-8') 
@@ -324,14 +324,13 @@ def check_redis_data(list):
         return False,None,None
    
    date_list = ast.literal_eval(date_list_str)
-   for account_data in list:
-      for d in date_list:
-         date = datetime.datetime.strptime(d, "%Y-%m-%d")
-         date = date.date()
-         if date >= account_data.start and date <= account_data.end:
-            return True,account_data,date
+
+   for d in date_list:
+      date_time = datetime.datetime.strptime(d, "%Y-%m-%d").date()
+      if date_time >= data.start and date_time <= data.end:
+           return True,date_time
          
-   return False,None,None
+   return False,None,
 
 
 
@@ -342,29 +341,25 @@ if __name__ == "__main__":
     if redisdb.ping() == False:
        logger.info('Could not establish Redis connection')
        sys.exit()
-    list = read_config()
-    if len(list) <= 0:
-       sys.exit()
+    data:CAccountClass = read_config()
 
-    browser = playwright.chromium.launch(headless=False)
-    context = browser.new_context()
-    temp = context.new_page()
+
     round = 1
     index =0
-    data = None
-    find_db_data = False
+
     while(True):  
-      if(find_db_data == False):
-           data = list[index]
-      logger.info('第%d轮,account=%s',round,data.account)
+      logger.info('round=%d,account=%s',round,data.account)
       round += 1    
-      
+      browser = playwright.chromium.launch(headless=False)
+      context = browser.new_context()
       page = context.new_page()
-      run(page,data,list)      
+      run(page,data)      
       page.close()
+      context.close()
+      browser.close()
+
       TRY_DATE = None
       DATE_LIST.clear()
-      find_db_data = False
       FINISH = False
       if(LIMIT_FLAG_IP):
         logger.info('IP limit Stop !!!')
@@ -372,26 +367,20 @@ if __name__ == "__main__":
         break
       if(LIMIT_FLAG_VISIT):
         logger.info('visit limit Stop !!!')
-        list.remove(data)
         PlayMusic('提醒.mp3')
-      if len(list) <= 0:
-        sys.exit()
-      index += 1
-      if index >= len(list):
-         index = 0
+        break
 
-      waitSecond =  WAIT_BASE * 60 / len(list)
+      add = random.uniform(1,5)
+      waitSecond =  WAIT_BASE + add
       logger.info('%s',f'waiting {waitSecond}s {waitSecond / 60}min ...')
 
       while(waitSecond > 0):   
         time.sleep(1)
         waitSecond -= 1
-        ret,data ,date= check_redis_data(list)
+        ret,date= check_redis_data(data)
         if ret:
-            logger.info("redisdb find date,account=%s,date=%s",data.account,date)
-            find_db_data = True
+            logger.info("redisdb find date,date=%s",date)
             break
         
     time.sleep(60)      
-    context.close()
-    browser.close()
+    
