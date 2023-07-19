@@ -17,6 +17,7 @@ import pickle
 
 LIMIT_FLAG_IP = False
 LIMIT_FLAG_VISIT = False
+LIMIT_ACCOUNT = False
 logger = {}
 WAIT_BASE = 30
 FINISH = False
@@ -33,13 +34,20 @@ class CDateClass:
 
 def check_html(html):   
     global LIMIT_FLAG_VISIT
+    global LIMIT_ACCOUNT
     c = re.compile('明日重置',re.S)
     s = re.search(c,html)
     if(s != None):
         LIMIT_FLAG_VISIT = True
         logger.info("visit limit !!!")
-        return False
-    return True
+    
+    c = re.compile('Your account has been frozen',re.S)
+    s = re.search(c,html)
+    if(s != None):
+        LIMIT_ACCOUNT = True
+        logger.info("account limit !!!")
+ 
+  
 
 
 
@@ -72,7 +80,6 @@ def response_event(response,page):
         logger.info('response_event 403,url=%s',response.url)
         try:
             page.wait_for_event('domcontentloaded')     
-            page.wait_for_timeout(7*1000)
        
             # 选择嵌套的 iframe 元素
             iframe_locator = page.locator("iframe")
@@ -120,13 +127,19 @@ def run(page,account,password):
     page.on("response", lambda response: response_event(response,page))
     try:
       Login(page,account,password)
-      count = 10
+      try:
+          page.wait_for_selector("随便测试", timeout=1000).click()
+      except:
+         logging.info('测试')
+      count = 2
       while(FINISH == False and count > 0):
         time.sleep(3) 
         count -= 1
     except Exception as e:
        logging.info('error login : %s',e)
        return
+    
+    check_html(page.content())   
 
 
 
@@ -181,12 +194,7 @@ def PlayMusic(name):
         logger.info('Muisc error %s',e)
 
    
-   
-
-
-
-#配置账号->读取->登录->获取时间->写入redis
-
+  
 
 if __name__ == "__main__":
   with sync_playwright() as playwright:
@@ -199,37 +207,47 @@ if __name__ == "__main__":
     if len(account_list) <= 0:
        logger.info('account is null')
        sys.exit()  
-    browser = playwright.chromium.launch(headless=False)
-    context = browser.new_context()
-    temp = context.new_page()
+
     index = 0
     round = 1
     while(True):
       data = account_list[index]  
-      logger.info('第%d轮,account=%s',round,data.account)
+      logger.info('round=%d,account=%s',round,data.account)
       round += 1
+      browser = playwright.chromium.launch(headless=False)
+      context = browser.new_context()
       page = context.new_page()
+
       run(page,data.account,data.password)      
       page.close()
+      context.close()
+      browser.close()
+
       FINISH = False
       if(LIMIT_FLAG_IP):
         logger.info('IP limit Stop !!!')
         PlayMusic('提醒.mp3')
         break
       if(LIMIT_FLAG_VISIT):
-        logger.info('visit limit Stop !!!,remove:%s',data.account)
+        logger.info('visit limit !!!,remove:%s',data.account)
+        account_list.remove(data)
+        PlayMusic('提醒.mp3')
+      elif(LIMIT_ACCOUNT):
+        logger.info('account limit !!!,remove:%s',data.account)
         account_list.remove(data)
         PlayMusic('提醒.mp3')
       
       LIMIT_FLAG_VISIT = False
+      LIMIT_ACCOUNT = False
       index += 1
       if index >= len(account_list):
          index = 0
+      add = random.uniform(1,5)
       waitSecond =  WAIT_BASE * 60 / len(account_list)
-      logger.info('%s',f'waiting {waitSecond}s {waitSecond / 60}min ...')
+      waitSecond += add
+      logger.info('%s',f'account len:{len(account_list)}  waiting {waitSecond}s {waitSecond / 60}min ...')
       time.sleep(waitSecond)
+   
 
-    
     time.sleep(60)
-    context.close()
-    browser.close()
+   
