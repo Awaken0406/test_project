@@ -346,7 +346,7 @@ if __name__ == "__main__":
 
     round = 1
     index =0
-
+    failCount = 0
     while(True):  
       logger.info('round=%d,account=%s',round,data.account)
       round += 1    
@@ -358,6 +358,15 @@ if __name__ == "__main__":
       context.close()
       browser.close()
 
+
+      if(FINISH == False):
+         failCount +=1
+      else:
+         failCount = 0
+      
+      if(failCount >= 5):
+        PlayMusic('提醒.mp3')
+        break
       TRY_DATE = None
       DATE_LIST.clear()
       FINISH = False
@@ -370,8 +379,8 @@ if __name__ == "__main__":
         PlayMusic('提醒.mp3')
         break
 
-      add = random.uniform(1,5)
-      waitSecond =  WAIT_BASE + add
+      add = random.randint(1,5)
+      waitSecond =  (WAIT_BASE * 60) + add
       logger.info('%s',f'waiting {waitSecond}s {waitSecond / 60}min ...')
 
       while(waitSecond > 0):   
