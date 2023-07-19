@@ -97,8 +97,8 @@ def response_event(response,page):
       global LIMIT_FLAG_IP
       LIMIT_FLAG_IP = True
       logger.info('IP limit!!!')
-   elif(response.status == 200 and 
-        ('https://portal.ustraveldocs.com/scheduleappointment' in response.url)):
+   elif(response.status == 200 and 'https://portal.ustraveldocs.com/scheduleappointment' in response.url):
+    try:
       text = response.text()
       global redisdb
       # 匹配日期字符串
@@ -115,6 +115,8 @@ def response_event(response,page):
         logger.info('写入日期')
         global FINISH
         FINISH = True
+    except Exception as e:
+       logger.info('error print date,%s',e)
 
 
 
@@ -210,6 +212,7 @@ if __name__ == "__main__":
 
     index = 0
     round = 1
+    failCount = 0
     while(True):
       data = account_list[index]  
       logger.info('round=%d,account=%s',round,data.account)
@@ -222,6 +225,14 @@ if __name__ == "__main__":
       page.close()
       context.close()
       browser.close()
+      if(FINISH == False):
+         failCount +=1
+      else:
+         failCount = 0
+      
+      if(failCount >= 5):
+        PlayMusic('提醒.mp3')
+        break
 
       FINISH = False
       if(LIMIT_FLAG_IP):
@@ -242,7 +253,7 @@ if __name__ == "__main__":
       index += 1
       if index >= len(account_list):
          index = 0
-      add = random.uniform(1,5)
+      add = random.randint(1,5)
       waitSecond =  WAIT_BASE * 60 / len(account_list)
       waitSecond += add
       logger.info('%s',f'account len:{len(account_list)}  waiting {waitSecond}s {waitSecond / 60}min ...')
