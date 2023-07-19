@@ -34,19 +34,13 @@ class CDateClass:
 
 def check_html(html):   
     global LIMIT_FLAG_VISIT
-    global LIMIT_ACCOUNT
+
     c = re.compile('明日重置',re.S)
     s = re.search(c,html)
     if(s != None):
         LIMIT_FLAG_VISIT = True
         logger.info("visit limit !!!")
-    
-    c = re.compile('Your account has been frozen',re.S)
-    s = re.search(c,html)
-    if(s != None):
-        LIMIT_ACCOUNT = True
-        logger.info("account limit !!!")
- 
+
   
 
 
@@ -65,7 +59,19 @@ def Login(page,account,password):
     page.get_by_role("button", name="登陆").click()   
     time.sleep(5)  
     page.wait_for_event('domcontentloaded')
-    page.get_by_text("重新预约").click()
+    try:
+        page.get_by_text("重新预约").click()
+    except Exception as e:
+        logger.info("重新预约 %s",e)
+        global LIMIT_ACCOUNT
+        c = re.compile('Your account has been frozen',re.S)
+        s = re.search(c,page.content())
+        if(s != None):
+          LIMIT_ACCOUNT = True
+          logger.info("account limit !!!")
+  
+ 
+
     time.sleep(3) 
 
 
@@ -247,6 +253,10 @@ if __name__ == "__main__":
         logger.info('account limit !!!,remove:%s',data.account)
         account_list.remove(data)
         PlayMusic('提醒.mp3')
+
+      if len(account_list) == 0:
+         logger.info('没号了，结束')
+         break
       
       LIMIT_FLAG_VISIT = False
       LIMIT_ACCOUNT = False
