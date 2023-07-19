@@ -31,6 +31,7 @@ DATE_LIST = []
 redisdb = StrictRedis(host='localhost',port=6379,db=0,password=None)
 DB_KEY = 'date'
 FINISH = False
+LIMIT_ACCOUNT = False
 
 def check_html(html):   
     global LIMIT_FLAG_VISIT
@@ -78,7 +79,16 @@ def Login(page,data:CAccountClass):
       time.sleep(3) 
       page.get_by_role("button", name="继续").click() 
     else:
-      page.get_by_text("重新预约").click()
+      try:
+        page.get_by_text("重新预约").click()
+      except Exception as e:
+        logger.info("重新预约 %s",e)
+        global LIMIT_ACCOUNT
+        c = re.compile('Your account has been frozen',re.S)
+        s = re.search(c,page.content())
+        if(s != None):
+          LIMIT_ACCOUNT = True
+          logger.info("account limit !!!")
     time.sleep(3) 
 
 
@@ -378,6 +388,9 @@ if __name__ == "__main__":
         logger.info('visit limit Stop !!!')
         PlayMusic('提醒.mp3')
         break
+      if(LIMIT_ACCOUNT):
+         PlayMusic('提醒.mp3')
+         break
 
       add = random.randint(1,5)
       waitSecond =  (WAIT_BASE * 60) + add
