@@ -2,9 +2,11 @@ import ast
 from redis import StrictRedis
 import re
 import datetime
+import time
 
 import pickle
 from datetime import date
+from playwright.sync_api import Playwright, sync_playwright
 #https://github.com/tporadowski/redis/releases
 
 response = """        var myDayHash = new Array();
@@ -43,19 +45,31 @@ my_dict['key3'] = 'value3'
 
 
 
-#my_string = "{'SenGeMail@163.com':'qq734697554':'2023-1-1':'2023-3-3':'0'}, {'SenGeMail@163.com':'qq734697554':'2023-1-1':'2023-3-3':'0'}"
+
 
 # 将字符串转换为 Python 对象
 
 with open('D:/code/V3/config.ini','r') as f:
     my_string = f.read()
 
+config = ast.literal_eval(my_string)
+print(config['account'])
+
 date_pattern = re.compile("{(.*?)}",re.S)
 date_list = date_pattern.findall(my_string)
 print(date_list)
 
 
-for item in date_list:
-    item = item.replace("'", "")
-    a, b,c,d,e = item.split(':')
-list = []
+
+
+for i in range(2):
+     with sync_playwright() as playwright:
+      browser = playwright.chromium.launch(headless=False)
+      context = browser.new_context()
+      page = context.new_page()
+      page.goto("https://www.baidu.com")
+      time.sleep(3)
+   
+      page.close()
+      context.close()
+      browser.close()
