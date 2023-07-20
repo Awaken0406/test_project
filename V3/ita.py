@@ -70,8 +70,7 @@ def run(page:Page) -> None:
     time.sleep(1)
     page.locator("#mat-select-value-3").click()
     page.get_by_text("SchenGen visa").click()
-    time.sleep(1)
-    time.sleep(3)
+    time.sleep(5)
     
     content = page.content()
     c = re.compile('很抱歉，目前没有可预约时段',re.S)
