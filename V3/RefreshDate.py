@@ -11,7 +11,7 @@ from redis import StrictRedis
 import re
 import datetime
 import pickle
-
+import mysql_db
 
 
 
@@ -21,7 +21,7 @@ LIMIT_ACCOUNT = False
 logger = {}
 WAIT_BASE = 30
 FINISH = False
-
+MAX_LOGIN = 14
 
 redisdb = StrictRedis(host='localhost',port=6379,db=0,password=None)
 
@@ -112,9 +112,11 @@ def response_event(response,page):
       date_list = re.findall(date_pattern,text)
       list = []
       for date in date_list:
-        time = datetime.datetime.strptime(date, "%d-%m-%Y")
-        logger.info("%s",time.date())
-        list.append(str(time.date()))
+        time = datetime.datetime.strptime(date, "%d-%m-%Y").date()
+        logger.info("%s",time)
+        list.append(str(time))
+        if time.year == 2023:
+           mysql_db.WriteDate(time)
       if(len(list) > 0):
         #serialized_dates = pickle.dumps(list)
         redisdb.set('date',str(list))
@@ -220,9 +222,32 @@ if __name__ == "__main__":
     round = 1
     failCount = 0
     while(True):
-      data = account_list[index]  
-      logger.info('round=%d,account=%s',round,data.account)
-      round += 1
+      data:CDateClass = account_list[index]  
+
+      row = mysql_db.GetLoginCount(data.account)   
+      now_date = (datetime.datetime.now() - datetime.timedelta(hours=12)).date()
+      login_date =None
+      login_count=0
+      if(row != None):
+        login_date = row[0]
+        login_count = row[1]
+        if(now_date > login_date):
+            login_count = 0
+
+      login_count += 1
+      logger.info('round=%d,account=%s,nowDate=%s,loginCount=%d',round,data.account,now_date,login_count)
+      if(login_count > MAX_LOGIN):
+         logging.info('超过登录上限删除,%s:%d',data.account,login_count)
+         account_list.remove(data)
+         PlayMusic('提醒.mp3')
+         index += 1
+         if index >= len(account_list):
+            index = 0
+         continue
+
+      mysql_db.UpdateLogin(data.account,now_date,login_count)
+
+      round += 1    
       browser = playwright.chromium.launch(headless=False)
       context = browser.new_context()
       page = context.new_page()
@@ -237,13 +262,13 @@ if __name__ == "__main__":
          failCount = 0
       
       if(failCount >= 5):
-        PlayMusic('提醒.mp3')
+        PlayMusic('错误.mp3')
         break
 
       FINISH = False
       if(LIMIT_FLAG_IP):
         logger.info('IP limit Stop !!!')
-        PlayMusic('提醒.mp3')
+        PlayMusic('错误.mp3')
         break
       if(LIMIT_FLAG_VISIT):
         logger.info('visit limit !!!,remove:%s',data.account)
