@@ -4,13 +4,11 @@ import sys
 from playwright.sync_api import Playwright, sync_playwright
 import time
 import pygame
-import os
 import random
 import logging
 from redis import StrictRedis
 import re
 import datetime
-import pickle
 import mysql_db
 
 
@@ -241,21 +239,25 @@ if __name__ == "__main__":
          account_list.remove(data)
          PlayMusic('提醒.mp3')
          index += 1
+         if(len(account_list) == 0):
+            logger.info('没号了，结束')
+            break
          if index >= len(account_list):
             index = 0
          continue
 
-      mysql_db.UpdateLogin(data.account,now_date,login_count)
+      
 
       round += 1    
       browser = playwright.chromium.launch(headless=False)
       context = browser.new_context()
       page = context.new_page()
-
       run(page,data.account,data.password)      
       page.close()
       context.close()
       browser.close()
+      mysql_db.UpdateLogin(data.account,now_date,login_count)
+
       if(FINISH == False):
          failCount +=1
       else:
