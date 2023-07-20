@@ -3,7 +3,7 @@ import pymysql
 import time
 import datetime
 
-
+#https://dev.mysql.com/downloads/file/?id=520510
 db = pymysql.connect(host='localhost',user='root',password='123456',port=3306,database='senge')
 if db.ping() == False:
     print("connect database fail")
