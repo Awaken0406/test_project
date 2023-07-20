@@ -8,7 +8,6 @@ import pygame
 import os
 import random
 import logging
-import pickle
 from redis import StrictRedis
 import mysql_db
 
@@ -383,9 +382,8 @@ if __name__ == "__main__":
          logging.info('超过登录上限:%d',login_count)
          PlayMusic('错误.mp3')
          break
-      mysql_db.UpdateLogin(data.account,now_date,login_count)
+ 
       round += 1  
-
       browser = playwright.chromium.launch(headless=False)
       context = browser.new_context()
       page = context.new_page()
@@ -393,6 +391,7 @@ if __name__ == "__main__":
       page.close()
       context.close()
       browser.close()
+      mysql_db.UpdateLogin(data.account,now_date,login_count)
 
 
       if(FINISH == False):
