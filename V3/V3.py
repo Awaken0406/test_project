@@ -10,6 +10,7 @@ import random
 import logging
 import pickle
 from redis import StrictRedis
+import mysql_db
 
 class CAccountClass:
    def __init__(self, account,password,start,end,count):
@@ -32,6 +33,7 @@ redisdb = StrictRedis(host='localhost',port=6379,db=0,password=None)
 DB_KEY = 'date'
 FINISH = False
 LIMIT_ACCOUNT = False
+MAX_LOGIN = 14
 
 def check_html(html):   
     global LIMIT_FLAG_VISIT
@@ -57,6 +59,13 @@ def PlayMusic(name):
 
 
 
+def check_frozen(html):
+      global LIMIT_ACCOUNT
+      c = re.compile('Your account has been frozen',re.S)
+      s = re.search(c,html)
+      if(s != None):
+        LIMIT_ACCOUNT = True
+        logger.info("account limit !!!")
 
 def Login(page,data:CAccountClass): 
     page.goto("https://portal.ustraveldocs.com/?language=Chinese%20(Simplified)&country=China")
@@ -72,23 +81,18 @@ def Login(page,data:CAccountClass):
     page.get_by_role("button", name="登陆").click()   
     time.sleep(5)  
     page.wait_for_event('domcontentloaded')
-    if(data.confirmCount == 0):#第一次预约还没预约到时间的
-      page.get_by_text("继续").click()
-      time.sleep(3) 
-      page.get_by_role("button", name="确认").click()   
-      time.sleep(3) 
-      page.get_by_role("button", name="继续").click() 
-    else:
-      try:
+    try:
+      if(data.confirmCount == 0):    
+        page.get_by_text("继续").click()
+        time.sleep(3) 
+        page.get_by_role("button", name="确认").click()   
+        time.sleep(3) 
+        page.get_by_role("button", name="继续").click() 
+      else:   
         page.get_by_text("重新预约").click()
-      except Exception as e:
-        logger.info("重新预约 %s",e)
-        global LIMIT_ACCOUNT
-        c = re.compile('Your account has been frozen',re.S)
-        s = re.search(c,page.content())
-        if(s != None):
-          LIMIT_ACCOUNT = True
-          logger.info("account limit !!!")
+    except Exception as e:
+        logger.info("%s",e)
+        check_frozen(page.content())
     time.sleep(3) 
 
 
@@ -159,10 +163,13 @@ def response_event(response,page):
       date_list = re.findall(date_pattern,text)
       list = []
       for date in date_list:
-        time = datetime.datetime.strptime(date, "%d-%m-%Y")
-        logger.info("%s",time.date())
-        list.append(str(time.date()))
-        DATE_LIST.append(time.date())
+        time = datetime.datetime.strptime(date, "%d-%m-%Y").date()
+        logger.info("%s",time)
+        list.append(str(time))
+        DATE_LIST.append(time)
+        if time.year == 2023:
+           mysql_db.WriteDate(time)
+
       if(len(list) > 0):
         #serialized_dates = pickle.dumps(list)
         redisdb.set(DB_KEY,str(list))
@@ -352,14 +359,33 @@ if __name__ == "__main__":
        logger.info('Could not establish Redis connection')
        sys.exit()
     data:CAccountClass = read_config()
+    row = mysql_db.GetLoginCount(data.account)   
+    now_date = (datetime.datetime.now() - datetime.timedelta(hours=12)).date()
+    login_date ={}
+    login_count=0
+    if(row != None):
+       login_date = row[0]
+       login_count = row[1]
+       if(now_date > login_date):
+          login_count = 0
 
 
     round = 1
-    index =0
     failCount = 0
     while(True):  
-      logger.info('round=%d,account=%s',round,data.account)
-      round += 1    
+      new_ = (datetime.datetime.now() - datetime.timedelta(hours=12)).date()
+      if(new_ > now_date):
+          now_date = new_
+          login_count = 0  
+      login_count += 1
+      logger.info('round=%d,account=%s,nowDate=%s,loginCount=%d',round,data.account,now_date,login_count)
+      if(login_count > MAX_LOGIN):
+         logging.info('超过登录上限:%d',login_count)
+         PlayMusic('错误.mp3')
+         break
+      mysql_db.UpdateLogin(data.account,now_date,login_count)
+      round += 1  
+
       browser = playwright.chromium.launch(headless=False)
       context = browser.new_context()
       page = context.new_page()
@@ -375,21 +401,22 @@ if __name__ == "__main__":
          failCount = 0
       
       if(failCount >= 5):
-        PlayMusic('提醒.mp3')
+        logger.info('Error failCount >= 5 !!!')
+        PlayMusic('错误.mp3')
         break
       TRY_DATE = None
       DATE_LIST.clear()
       FINISH = False
       if(LIMIT_FLAG_IP):
         logger.info('IP limit Stop !!!')
-        PlayMusic('提醒.mp3')
+        PlayMusic('错误.mp3')
         break
       if(LIMIT_FLAG_VISIT):
         logger.info('visit limit Stop !!!')
-        PlayMusic('提醒.mp3')
+        PlayMusic('错误.mp3')
         break
       if(LIMIT_ACCOUNT):
-         PlayMusic('提醒.mp3')
+         PlayMusic('错误.mp3')
          break
 
       add = random.randint(1,5)
@@ -406,3 +433,5 @@ if __name__ == "__main__":
         
     time.sleep(60)      
     
+
+ 
