@@ -89,12 +89,12 @@ if __name__ == "__main__":
     proxy = None
     index =0
     while(True):    
-        if(index % 2 == 0):
+        if(index % 3 == 0):
             proxy = get_proxy()
         index += 1
         if proxy == None:
             sys.exit()
-        print("proxy=",proxy)
+        print("proxy=",proxy['server'])
         browser = playwright.chromium.launch(headless=False,proxy=proxy)
         context = browser.new_context()
         page = context.new_page()
@@ -105,4 +105,4 @@ if __name__ == "__main__":
         page.close()
         context.close()
         browser.close()
-        time.sleep(60 * 5)
+        time.sleep(60 * 1)
