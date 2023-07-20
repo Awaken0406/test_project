@@ -7,6 +7,7 @@ import time
 import pickle
 from datetime import date
 from playwright.sync_api import Playwright, sync_playwright
+import mysql_db
 #https://github.com/tporadowski/redis/releases
 
 response = """        var myDayHash = new Array();
@@ -60,7 +61,12 @@ date_list = date_pattern.findall(my_string)
 print(date_list)
 
 
-
+mysql_db.UpdateLogin('f','2023-5-5','20')
+row = mysql_db.GetLoginCount('f')
+print(row[0])
+print(row[1])
+now = datetime.datetime.now().date()
+mysql_db.WriteDate(now)
 
 for i in range(2):
      with sync_playwright() as playwright:
@@ -68,8 +74,9 @@ for i in range(2):
       context = browser.new_context()
       page = context.new_page()
       page.goto("https://www.baidu.com")
-      time.sleep(3)
+      time.sleep(600)
    
       page.close()
       context.close()
       browser.close()
+
