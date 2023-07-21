@@ -32,7 +32,7 @@ def init_log():
 # 指定日志记录格式
   formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
   console_handler.setFormatter(formatter)
-  console_handler.encoding = 'gbk'
+  console_handler.encoding = 'utf-8'
   file_handler.setFormatter(formatter)
 
 # 将 handler 添加到 logger 中
@@ -125,7 +125,6 @@ def run(page:Page) -> None:
     if(s != None):
         logger.info("目前没有可预约时段")
     else:
-       logger.info(content)
        PlayMusic()
        while(True):
          time.sleep(10000)
