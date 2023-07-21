@@ -45,10 +45,11 @@ params = {
         'pt': 1,
         'sep': 1,
         'dedup':1,
-        'secret_id': 'oo28ceg7wvkkb7dcaxxx',
-        'signature': 'cqve9xl1u4vpyqq677g1a4j313qno16u',
+        'secret_id': 'o3jriybjgabkw9s4ttmo',
+        'signature': 'cck1v6kn2to5ms1qaisjatzpf7lyt92b',
     }
 api = 'https://dps.kdlapi.com/api/getdps/'
+
 
 # 通过API获取代理
 def get_proxy():
@@ -59,7 +60,7 @@ def get_proxy():
     if r.status_code == 200:
         proxy = {
             "server": f'http://{r.text}',
-            "username": "d2304848217",
+            "username": "d2704271743",
             "password": "9an858x3",
             } 
         return proxy
@@ -107,7 +108,7 @@ def run(page:Page) -> None:
     c = re.compile('很抱歉，目前没有可预约时段',re.S)
     s = re.search(c,content)
     count = 0
-    while(s != None and count < 10):
+    while(s != None and count < 100):
 
         page.locator("#mat-select-value-1").click()
         page.get_by_text("德国签证申请中心 - 南京").click()#
