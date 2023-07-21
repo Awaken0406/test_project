@@ -4,14 +4,37 @@ from playwright.sync_api import Playwright, sync_playwright, expect
 import time
 import requests
 from playwright.sync_api import Page
+import logging
 
 USER = 'SenGeMail@163.com'
 PASSWORD = 'Qq734697554@'
 
 #USER = '2428721828@qq.com'
 #PASSWORD = 'Kbh123456@'
+logger = {}
+def init_log():
+  global logger
+  logger = logging.getLogger()
+  logger.setLevel(logging.DEBUG)
+
+# 创建控制台 handler
+  console_handler = logging.StreamHandler()
+  console_handler.setLevel(logging.DEBUG)
 
 
+# 创建文件 handler
+  file_handler = logging.FileHandler('ita_log.log')
+  file_handler.setLevel(logging.DEBUG)
+
+# 指定日志记录格式
+  formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+  console_handler.setFormatter(formatter)
+  console_handler.encoding = 'utf-8'
+  file_handler.setFormatter(formatter)
+
+# 将 handler 添加到 logger 中
+  logger.addHandler(console_handler)
+  logger.addHandler(file_handler)
 
 # 定义API配置
 params = {
@@ -76,31 +99,34 @@ def run(page:Page) -> None:
     c = re.compile('很抱歉，目前没有可预约时段',re.S)
     s = re.search(c,content)
     if(s != None):
-        print("目前没有可预约时段")
+        logger.info("目前没有可预约时段")
+        page.reload()
+        time.sleep(100)
     else:
-       print(content)
+       logger.info(content)
        while(True):
          time.sleep(100)
 
 
 if __name__ == "__main__":
- with sync_playwright() as playwright:   
+ with sync_playwright() as playwright:
+    init_log()   
     proxy = None
     index =0
     while(True):    
-        if(index % 3 == 0):
-            proxy = get_proxy()
+        #if(index % 3 == 0):
+        proxy = get_proxy()
         index += 1
         if proxy == None:
             sys.exit()
-        print("proxy=",proxy['server'])
+        logger.info("proxy=%s",proxy['server'])
         browser = playwright.chromium.launch(headless=False,proxy=proxy)
         context = browser.new_context()
         page = context.new_page()
         try:
             run(page)
         except Exception as e:
-           print('error',e)               
+           logger.info('error %s',e)               
         page.close()
         context.close()
         browser.close()
