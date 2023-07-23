@@ -1,13 +1,25 @@
+import ast
 import re
 import sys
 from playwright.sync_api import Playwright, sync_playwright, expect
 import time
+import pygame
 import requests
 from playwright.sync_api import Page
 import logging
 
-USER = 'SenGeMail@163.com'
-PASSWORD = 'Qq734697554@'
+USER = ''
+PASSWORD = ''
+
+def read_config():
+    with open('./ita.ini', 'r') as f:
+        g_config = f.read()
+
+    global USER
+    global PASSWORD
+    config = ast.literal_eval(g_config)
+    USER =   config['account']
+    PASSWORD = config['password']
 
 #USER = '2428721828@qq.com'
 #PASSWORD = 'Kbh123456@'
@@ -63,7 +75,14 @@ def get_proxy():
     else:
         return None
 
-
+def PlayMusic(name):
+  try:
+    dir_path = './Muisc/'
+    pygame.mixer.music.load(dir_path + name)
+    pygame.mixer.music.play()
+    logger.info('%s playing...',name)
+  except Exception as e:
+        logger.info('Muisc error %s',e)
 
 
 def run(page:Page) -> None:
@@ -98,19 +117,37 @@ def run(page:Page) -> None:
     content = page.content()
     c = re.compile('很抱歉，目前没有可预约时段',re.S)
     s = re.search(c,content)
+
+    count = 0
+    while(s != None and count < 25):
+        page.locator("#mat-select-value-1").click()
+        page.get_by_text("南京意大利签证申请中心").click()#
+        time.sleep(3)
+        page.locator("#mat-select-value-1").click()
+        page.get_by_text("广州意大利签证申请中心").click()
+        time.sleep(1)
+        page.locator("#mat-select-value-3").click()
+        page.get_by_text("SchenGen visa").click()
+        count +=1
+        logger.info('load count =%d',count)
+        time.sleep(8)
+        content = page.content()
+        s = re.search(c,content)
+
+
     if(s != None):
         logger.info("目前没有可预约时段")
-        page.reload()
-        time.sleep(100)
     else:
-       logger.info(content)
+       PlayMusic('星辰大海.mp3')
        while(True):
-         time.sleep(100)
+         time.sleep(10000)
 
 
 if __name__ == "__main__":
  with sync_playwright() as playwright:
-    init_log()   
+    init_log()
+    read_config()
+    pygame.init()   
     proxy = None
     index =0
     while(True):    
@@ -118,6 +155,7 @@ if __name__ == "__main__":
         proxy = get_proxy()
         index += 1
         if proxy == None:
+            logger.info('没有代理了')
             sys.exit()
         logger.info("proxy=%s",proxy['server'])
         browser = playwright.chromium.launch(headless=False,proxy=proxy)
