@@ -1,3 +1,4 @@
+import ast
 import os
 import random
 import re
@@ -9,8 +10,21 @@ import requests
 from playwright.sync_api import Page
 import logging
 
-USER = 'SenGeMail@163.com'
-PASSWORD = 'Qq734697554@'
+USER = ''
+PASSWORD = ''
+
+IP_LIMIT = False
+
+
+def read_config():
+    with open('./deu.ini', 'r') as f:
+        g_config = f.read()
+
+    global USER
+    global PASSWORD
+    config = ast.literal_eval(g_config)
+    USER =   config['account']
+    PASSWORD = config['password']
 
 #USER = '2428721828@qq.com'
 #PASSWORD = 'Kbh123456@'
@@ -67,14 +81,24 @@ def get_proxy():
     else:
         return None
 
-def PlayMusic():
-  dir_path = 'D:/Users/chenyongsen/Music/'
-  file_names = [f for f in os.listdir(dir_path) if not f.startswith('!!!')]
-  name = random.choice(file_names)
-  pygame.mixer.music.load(dir_path + name)
-  pygame.mixer.music.play()
-  print(name,'playing...')
+def PlayMusic(name):
+  try:
+    dir_path = './Muisc/'
+    pygame.mixer.music.load(dir_path + name)
+    pygame.mixer.music.play()
+    logger.info('%s playing...',name)
+  except Exception as e:
+        logger.info('Muisc error %s',e)
 
+
+
+
+def response_event(response,page):
+   logger.info('response_event,status=%d,url=%s,',response.status,response.url)
+   if(response.status == 429 and 'https://lift-apicn.vfsglobal.com/appointment/CheckIsSlotAvailable' in requests.url):
+        logger.info('response_event 429,ip limit,url=%s',response.url)
+        global IP_LIMIT
+        IP_LIMIT = True
 
 def run(page:Page) -> None:
  
@@ -82,6 +106,7 @@ def run(page:Page) -> None:
         Object.defineProperties(navigator, {webdriver:{get:()=>undefined}});
         """
     page.add_init_script(js)
+   # page.on("response", lambda response: response_event(response,page))
     page.goto("https://visa.vfsglobal.com/chn/zh/deu/login")
     page.wait_for_load_state("domcontentloaded")
     time.sleep(3)
@@ -106,10 +131,10 @@ def run(page:Page) -> None:
   
     content = page.content()
     c = re.compile('很抱歉，目前没有可预约时段',re.S)
+    #c = re.compile('最早可预约的时间',re.S)
     s = re.search(c,content)
     count = 0
-    while(s != None and count < 100):
-
+    while(s != None and count < 25):
         page.locator("#mat-select-value-1").click()
         page.get_by_text("德国签证申请中心 - 南京").click()#
         time.sleep(3)
@@ -125,22 +150,26 @@ def run(page:Page) -> None:
     if(s != None):
         logger.info("目前没有可预约时段")
     else:
-       PlayMusic()
+       PlayMusic('星辰大海.mp3')
        while(True):
          time.sleep(10000)
+
+
 
 
 if __name__ == "__main__":
  with sync_playwright() as playwright:
     init_log()   
+    read_config()
     pygame.init()
     proxy = None
     index =0
     while(True):    
         #if(index % 3 == 0):
         proxy = get_proxy()
-        index += 1
+       # index += 1
         if proxy == None:
+            logger.info('没有代理了')
             sys.exit()
         logger.info("proxy=%s",proxy['server'])
         browser = playwright.chromium.launch(headless=False,proxy=proxy)
@@ -149,8 +178,10 @@ if __name__ == "__main__":
         try:
             run(page)
         except Exception as e:
-           logger.info('error %s',e)               
+           logger.info('error %s',e)    
+           
         page.close()
         context.close()
         browser.close()
+        IP_LIMIT = False    
         time.sleep(10)
