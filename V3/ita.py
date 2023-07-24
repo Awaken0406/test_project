@@ -48,14 +48,18 @@ def init_log():
   logger.addHandler(console_handler)
   logger.addHandler(file_handler)
 
+secret_id = 'o3jriybjgabkw9s4ttmo'
+signature = 'cck1v6kn2to5ms1qaisjatzpf7lyt92b'
+proxy_name = 'd2704271743'
+proxy_password = '9an858x3'
 # 定义API配置
 params = {
         'num': 1,
         'pt': 1,
         'sep': 1,
         'dedup':1,
-        'secret_id': 'oo28ceg7wvkkb7dcaxxx',
-        'signature': 'cqve9xl1u4vpyqq677g1a4j313qno16u',
+        'secret_id': secret_id,
+        'signature': signature,
     }
 api = 'https://dps.kdlapi.com/api/getdps/'
 
@@ -64,13 +68,31 @@ def get_proxy():
     global api
     global params
 
+    count_params = {
+          'secret_id': secret_id,
+          'signature': signature,
+        } 
+    r = requests.get('https://dps.kdlapi.com/api/getipbalance',count_params)
+    if r.status_code == 200:
+        logger.info(r.text)
+
     r = requests.get(api,params)
     if r.status_code == 200:
         proxy = {
             "server": f'http://{r.text}',
-            "username": "d2304848217",
-            "password": "9an858x3",
+            "username": proxy_name,
+            "password": proxy_password,
             } 
+                 
+        time_params = {
+          'secret_id': secret_id,
+          'signature': signature,
+          'proxy' : r.text
+        }
+        r = requests.get('https://dps.kdlapi.com/api/getdpsvalidtime',time_params)
+        if(r.status_code == 200):
+           logger.info(r.text)
+        
         return proxy
     else:
         return None
@@ -112,17 +134,17 @@ def run(page:Page) -> None:
     time.sleep(1)
     page.locator("#mat-select-value-3").click()
     page.get_by_text("SchenGen visa").click()
-    time.sleep(5)
+    time.sleep(8)
     
     content = page.content()
     c = re.compile('很抱歉，目前没有可预约时段',re.S)
     s = re.search(c,content)
 
     count = 0
-    while(s != None and count < 25):
+    while(s != None and count < 23):
         page.locator("#mat-select-value-1").click()
         page.get_by_text("南京意大利签证申请中心").click()#
-        time.sleep(3)
+        time.sleep(1)
         page.locator("#mat-select-value-1").click()
         page.get_by_text("广州意大利签证申请中心").click()
         time.sleep(1)
@@ -130,14 +152,17 @@ def run(page:Page) -> None:
         page.get_by_text("SchenGen visa").click()
         count +=1
         logger.info('load count =%d',count)
-        time.sleep(8)
+        page.wait_for_load_state('load')
+        time.sleep(5)
         content = page.content()
         s = re.search(c,content)
 
 
+
     if(s != None):
         logger.info("目前没有可预约时段")
-    else:
+    else:   
+       page.get_by_role("button", name="继续").click()
        PlayMusic('星辰大海.mp3')
        while(True):
          time.sleep(10000)
@@ -168,4 +193,4 @@ if __name__ == "__main__":
         page.close()
         context.close()
         browser.close()
-        time.sleep(60 * 1)
+        time.sleep(5)
