@@ -149,15 +149,16 @@ def run(page:Page) -> None:
 
     page.locator("#mat-select-value-1").click()
     page.get_by_text("德国签证申请中心 - 广州").click()
-    time.sleep(8)
+    time.sleep(7)
  #   page.locator("#mat-select-value-3").click()
  #   page.get_by_text("SchenGen visa").click()
   
     content = page.content()
-    c = re.compile('很抱歉，目前没有可预约时段',re.S)
+    #c = re.compile('很抱歉，目前没有可预约时段',re.S)
+    c = re.compile('最早可预约的时间',re.S)
     s = re.search(c,content)
     count = 0
-    while(s != None and count < 23):
+    while(s == None and count < 23):
         page.locator("#mat-select-value-1").click()
         page.get_by_text("德国签证申请中心 - 南京").click()#
         time.sleep(1)
@@ -171,7 +172,7 @@ def run(page:Page) -> None:
         s = re.search(c,content)
  
 
-    if(s != None):   
+    if(s == None):   
         logger.info("目前没有可预约时段")
     else:
        page.get_by_role("button", name="继续").click()
