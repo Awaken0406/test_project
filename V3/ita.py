@@ -1,4 +1,5 @@
 import ast
+import datetime
 import re
 import sys
 from playwright.sync_api import Playwright, sync_playwright, expect
@@ -134,14 +135,15 @@ def run(page:Page) -> None:
     time.sleep(1)
     page.locator("#mat-select-value-3").click()
     page.get_by_text("SchenGen visa").click()
-    time.sleep(8)
+    time.sleep(7)
     
     content = page.content()
-    c = re.compile('很抱歉，目前没有可预约时段',re.S)
+    #c = re.compile('很抱歉，目前没有可预约时段',re.S)
+    c = re.compile('最早可预约的时间',re.S)
     s = re.search(c,content)
 
     count = 0
-    while(s != None and count < 23):
+    while(s == None and count < 23):
         page.locator("#mat-select-value-1").click()
         page.get_by_text("南京意大利签证申请中心").click()#
         time.sleep(1)
@@ -159,9 +161,15 @@ def run(page:Page) -> None:
 
 
 
-    if(s != None):
+    if(s == None):
         logger.info("目前没有可预约时段")
     else:   
+      #<div class="alert alert-info border-0 rounded-0"> 最早可预约的时间 : 25-07-2023 </div>
+      # pattern = re.compile(r'<div class="alert alert-info border-0 rounded-0"> 最早可预约的时间 : (.*?) </div>',re.S)
+      # match = re.search(pattern, page.content())
+      # date = match.group(1)
+      # print(date)
+      # time = datetime.datetime.strptime(date, "%d-%m-%Y").date()
        page.get_by_role("button", name="继续").click()
        PlayMusic('星辰大海.mp3')
        while(True):
@@ -194,3 +202,4 @@ if __name__ == "__main__":
         context.close()
         browser.close()
         time.sleep(5)
+
