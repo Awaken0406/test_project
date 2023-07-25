@@ -50,8 +50,8 @@ def WriteDate(date):
 
 def GetAccount_ita(date:date):
   try:
-    sql = 'SELECT * FROM ita where DATE(%s) >= start and DATE(%s) <= end and state = 0'
-    cursor.execute(sql,( str(date),str(date)))
+    sql = 'SELECT * FROM ita where  DATE(%s) <= end and state = 0'
+    cursor.execute(sql,(str(date)))
     rows = cursor.fetchall()
     for row in rows:
         data = CAccountClass()
@@ -77,8 +77,8 @@ def GetAccount_ita(date:date):
 
 def GetAccount_deu(date:date):
   try:
-    sql = 'SELECT * FROM deu where DATE(%s) >= start and DATE(%s) <= end and state = 0'
-    cursor.execute(sql,( str(date),str(date)))
+    sql = 'SELECT * FROM deu where  DATE(%s) <= end and state = 0'
+    cursor.execute(sql,(str(date)))
     rows = cursor.fetchall()
     for row in rows:
         data = CAccountClass()
@@ -101,6 +101,6 @@ def GetAccount_deu(date:date):
   except Exception as e:
     print("error",e)
 
-#time_date = datetime.datetime.strptime('2023-9-2', "%Y-%m-%d").date()
-#data = GetAccount_deu(time_date)
+#time_date = datetime.datetime.strptime('2023-8-10', "%Y-%m-%d").date()
+#data = GetAccount_ita(time_date)
 #print('%s',vars(data))
