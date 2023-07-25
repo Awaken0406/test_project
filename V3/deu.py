@@ -1,4 +1,5 @@
 import ast
+import datetime
 import os
 import random
 import re
@@ -9,6 +10,8 @@ import pygame
 import requests
 from playwright.sync_api import Page
 import logging
+import mysql_db
+import auto_fill
 
 USER = ''
 PASSWORD = ''
@@ -124,6 +127,32 @@ def response_event(response,page):
         global IP_LIMIT
         IP_LIMIT = True
 
+
+def do_it(page:Page):
+
+      #<div class="alert alert-info border-0 rounded-0"> 最早可预约的时间 : 25-07-2023 </div>
+       pattern = re.compile(r'<div class="alert alert-info border-0 rounded-0"> 最早可预约的时间 : (.*?) </div>',re.S)
+       match = re.search(pattern, page.content())
+       date = match.group(1)
+       time_date = datetime.datetime.strptime(date, "%d-%m-%Y").date()
+       logging.info("日期:%s",time_date)
+       page.get_by_role("button", name="继续").click()
+       time.sleep(3)
+
+       data = mysql_db.GetAccount_ita(time_date)
+       if(date == None):
+          logging.info('没有符合日期的')
+          return
+       logging.info('%s',vars(data))
+       
+       try:
+          auto_fill.fill_data(page, data)
+       except Exception as e:
+          logging.info('%s',e)
+
+       while(True):
+         time.sleep(10000)
+
 def run(page:Page) -> None:
  
     js = """
@@ -172,14 +201,14 @@ def run(page:Page) -> None:
         s = re.search(c,content)
  
 
-    if(s == None):   
+    if(s == None):
         logger.info("目前没有可预约时段")
-    else:
-       page.get_by_role("button", name="继续").click()
-       PlayMusic('星辰大海.mp3')
-       while(True):
-         time.sleep(10000)
-
+    else:  
+        try:
+            PlayMusic('星辰大海.mp3')
+            do_it(page)
+        except Exception as e:
+            logger.info('do_it,%s',e) 
 
 
 
