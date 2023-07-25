@@ -1,9 +1,9 @@
 import sys
 import pymysql
-import time
+from  datetime import date
+from auto_fill import CAccountClass
 import datetime
 
-#https://dev.mysql.com/downloads/file/?id=520510
 db = pymysql.connect(host='localhost',user='root',password='123456',port=3306,database='senge')
 if db.ping() == False:
     print("connect database fail")
@@ -45,3 +45,62 @@ def WriteDate(date):
     db.commit()
  except Exception as e:
     print("error",e)
+
+
+
+def GetAccount_ita(date:date):
+  try:
+    sql = 'SELECT * FROM ita where DATE(%s) >= start and DATE(%s) <= end and state = 0'
+    cursor.execute(sql,( str(date),str(date)))
+    rows = cursor.fetchall()
+    for row in rows:
+        data = CAccountClass()
+        data.sexual  = row[0]
+        data.name  = row[1]
+        data.sex = row[2]
+        data.phone = row[3]
+        data.mail = row[4]
+        data.passport = row[5]
+        data.start = row[6]
+        data.end = row[7]
+        data.birth = row[8]
+        data.effective = row[9]
+
+        sql = 'UPDATE  ita SET state = 1 WHERE passport = %s'
+        cursor.execute(sql, (data.passport))
+        db.commit()
+        return data
+    return None
+  except Exception as e:
+    print("error",e)
+
+
+def GetAccount_deu(date:date):
+  try:
+    sql = 'SELECT * FROM deu where DATE(%s) >= start and DATE(%s) <= end and state = 0'
+    cursor.execute(sql,( str(date),str(date)))
+    rows = cursor.fetchall()
+    for row in rows:
+        data = CAccountClass()
+        data.sexual  = row[0]
+        data.name  = row[1]
+        data.sex = row[2]
+        data.phone = row[3]
+        data.mail = row[4]
+        data.passport = row[5]
+        data.start = row[6]
+        data.end = row[7]
+        data.birth = row[8]
+        data.effective = row[9]
+
+        sql = 'UPDATE  deu SET state = 1 WHERE passport = %s'
+        cursor.execute(sql, (data.passport))
+        db.commit()
+        return data
+    return None
+  except Exception as e:
+    print("error",e)
+
+#time_date = datetime.datetime.strptime('2023-9-2', "%Y-%m-%d").date()
+#data = GetAccount_deu(time_date)
+#print('%s',vars(data))
