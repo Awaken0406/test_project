@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>MySQL Table Viewer</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    $(document).ready(function() {
+        console.log('gettable')
+      $.getJSON('/gettable', function(data) {
+        console.log(data)
+        var list = '';
+        $.each(data, function(index, value) {
+            console.log('key+value',index,value)
+          list += '<li><a href="#" class="table" data-table="' + value.Tables_in_senge + '">' + value.Tables_in_senge + '</a></li>';
+        });
+        $('#tablelist').html(list);
+        console.log(list)
+      });
+
+      $('#tablelist').on('click', 'a.table', function(event) {
+        event.preventDefault();
+        var tablename = $(this).data('table');
+        $.getJSON('/getdata/' + encodeURIComponent(tablename), function(data) {
+          var table = '<table>';
+          var headers = '<tr>';
+          $.each(data[0], function(key, value) {
+            headers += '<th>' + key + '</th>';
+          });
+          headers += '</tr>';
+          table += headers;
+          var dateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?(?:Z|[+-]\d{2}:\d{2})?$/;
+          $.each(data, function(index, value) {
+            var row = '<tr>';
+            $.each(value, function(key, value) {
+                if (typeof value === 'string' && dateRegex.test(value)) {        
+                    value = (new Date(value)).toLocaleDateString();
+                }
+                row += '<td>' + value + '</td>';
+            });
+            row += '</tr>';
+            table += row;
+          });
+          table += '</table>';
+          $('#tabledata').html(table);
+        });
+      });
+    });
+  </script>
+</head>
+<body>
+  <h1>MySQL Table Viewer</h1>
+  <div>
+    <ul id="tablelist"></ul>
+  </div>
+  <div>
+    <h2>Table Data</h2>
+    <div id="tabledata"></div>
+    <style>
+        table {
+          border-collapse: separate;
+          border-spacing: 10px;
+        }
+        
+        td, th {
+          padding-left: 10px;
+          padding-right: 10px;
+        }
+      </style>
+  </div>
+</body>
+</html>
