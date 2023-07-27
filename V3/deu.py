@@ -139,7 +139,7 @@ def do_it(page:Page):
        page.get_by_role("button", name="继续").click()
        time.sleep(3)
 
-       data = mysql_db.GetAccount_ita(time_date)
+       data = mysql_db.GetAccount_deu(time_date)
        if(date == None):
           logging.info('没有符合日期的')
           return
