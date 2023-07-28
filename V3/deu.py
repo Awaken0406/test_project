@@ -141,11 +141,11 @@ def do_it(page:Page):
        match = re.search(pattern, page.content())
        date = match.group(1)
        time_date = datetime.datetime.strptime(date, "%d-%m-%Y").date()
-       logging.info("日期:%s",time_date)
+       logging.info("最早可预约的时间:%s",time_date)
        page.get_by_role("button", name="继续").click()
        time.sleep(3)
 
-       data = mysql_db.GetAccount_ita(time_date)
+       data = mysql_db.GetAccount_deu(time_date)
        if(date == None):
           logging.info('没有符合日期的')
           return
