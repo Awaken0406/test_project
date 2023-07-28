@@ -1,5 +1,6 @@
 import ast
 import datetime
+import json
 import os
 import random
 import re
@@ -12,6 +13,7 @@ from playwright.sync_api import Page
 import logging
 import mysql_db
 import auto_fill
+from mysql_db import CProxyData
 
 USER = ''
 PASSWORD = ''
@@ -35,16 +37,16 @@ logger = {}
 def init_log():
   global logger
   logger = logging.getLogger()
-  logger.setLevel(logging.DEBUG)
+  logger.setLevel(logging.INFO)
 
 # 创建控制台 handler
   console_handler = logging.StreamHandler()
-  console_handler.setLevel(logging.DEBUG)
+  console_handler.setLevel(logging.INFO)
 
 
 # 创建文件 handler
   file_handler = logging.FileHandler('deu_log.log')
-  file_handler.setLevel(logging.DEBUG)
+  file_handler.setLevel(logging.INFO)
 
 # 指定日志记录格式
   formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
@@ -58,51 +60,55 @@ def init_log():
 
 
 
-secret_id = 'o3jriybjgabkw9s4ttmo'
-signature = 'cck1v6kn2to5ms1qaisjatzpf7lyt92b'
-proxy_name = 'd2704271743'
-proxy_password = '9an858x3'
-# 定义API配置
-params = {
+
+
+def get_proxy(proxyData:mysql_db.CProxyData):
+
+    params = {
         'num': 1,
         'pt': 1,
         'sep': 1,
         'dedup':1,
-        'secret_id': secret_id,
-        'signature': signature,
+        'secret_id': proxyData.secret_id,
+        'signature': proxyData.signature,
     }
-api = 'https://dps.kdlapi.com/api/getdps/'
-
-
-def get_proxy():
-    global api
-    global params
+    api = 'https://dps.kdlapi.com/api/getdps/'
 
     count_params = {
-          'secret_id': secret_id,
-          'signature': signature,
+          'secret_id': proxyData.secret_id,
+          'signature': proxyData.signature,
         } 
     r = requests.get('https://dps.kdlapi.com/api/getipbalance',count_params)
     if r.status_code == 200:
-        logger.info(r.text)
+        data = json.loads(r.text)
+        value = data['data']['balance']
+        logger.info('剩余IP:%s',value)
 
     r = requests.get(api,params)
     if r.status_code == 200:
+        ip = r.text
         proxy = {
-            "server": f'http://{r.text}',
-            "username": proxy_name,
-            "password": proxy_password,
+            "server": f'http://{ip}',
+            "username": proxyData.proxy_name,
+            "password": proxyData.proxy_password,
             } 
-        
-             
+                 
         time_params = {
-          'secret_id': secret_id,
-          'signature': signature,
+          'secret_id': proxyData.secret_id,
+          'signature': proxyData.signature,
           'proxy' : r.text
         }
         r = requests.get('https://dps.kdlapi.com/api/getdpsvalidtime',time_params)
         if(r.status_code == 200):
-           logger.info(r.text)
+            data = json.loads(r.text)
+            value = data['data'][ip]
+            current_time = datetime.datetime.now()
+            delta = datetime.timedelta(seconds=int(value))
+            future_time = current_time + delta   
+            formatted_time = future_time.strftime('%Y-%m-%d %H:%M:%S')
+            future_time = datetime.datetime.strptime(formatted_time, '%Y-%m-%d %H:%M:%S')
+            logger.info('IP:%s,有效时长:%d min,持续到:%s',ip,int(int(value) / 60),future_time)
+           
         
         return proxy
     else:
@@ -139,12 +145,15 @@ def do_it(page:Page):
        page.get_by_role("button", name="继续").click()
        time.sleep(3)
 
-       data = mysql_db.GetAccount_deu(time_date)
+       data = mysql_db.GetAccount_ita(time_date)
        if(date == None):
           logging.info('没有符合日期的')
           return
-       logging.info('%s',vars(data))
-       
+       logging.info('收取验证码的邮箱:%s',USER)
+       birthDate =datetime.datetime.strftime(datetime.datetime.strptime(data.birth, '%Y-%m-%d'), '%Y-%m-%d %b')
+       effectiveDate =datetime.datetime.strftime(datetime.datetime.strptime(data.effective, '%Y-%m-%d'), '%Y-%m-%d %b')
+       logging.info('姓名:%s %s,性别:%s,护照号:%s,有效期:%s,出生日期:%s',data.sexual,data.name,data.sex,data.passport,birthDate,effectiveDate)
+
        try:
           auto_fill.fill_data(page, data)
        except Exception as e:
@@ -217,11 +226,11 @@ if __name__ == "__main__":
     init_log()   
     read_config()
     pygame.init()
-    proxy = None
+    proxyData = mysql_db.GetProxyData()
     index =0
     while(True):    
         #if(index % 3 == 0):
-        proxy = get_proxy()
+        proxy = get_proxy(proxyData)
        # index += 1
         if proxy == None:
             logger.info('没有代理了')
