@@ -149,12 +149,13 @@ def do_it(page:Page):
        if(date == None):
           logging.info('没有符合日期的')
           return
-       logging.info('收取验证码的邮箱:%s',USER)
-       birthDate =datetime.datetime.strftime(datetime.datetime.strptime(data.birth, '%Y-%m-%d'), '%Y-%m-%d %b')
-       effectiveDate =datetime.datetime.strftime(datetime.datetime.strptime(data.effective, '%Y-%m-%d'), '%Y-%m-%d %b')
-       logging.info('姓名:%s %s,性别:%s,护照号:%s,有效期:%s,出生日期:%s',data.sexual,data.name,data.sex,data.passport,birthDate,effectiveDate)
+
 
        try:
+          logging.info('收取验证码的邮箱:%s',USER)
+          birthDate =datetime.datetime.strftime(datetime.datetime.strptime(data.birth, '%Y-%m-%d'), '%Y-%m-%d %b')
+          effectiveDate =datetime.datetime.strftime(datetime.datetime.strptime(data.effective, '%Y-%m-%d'), '%Y-%m-%d %b')
+          logging.info('姓名:%s %s,性别:%s,护照号:%s,有效期:%s,出生日期:%s',data.sexual,data.name,data.sex,data.passport,birthDate,effectiveDate)
           auto_fill.fill_data(page, data)
        except Exception as e:
           logging.info('%s',e)
