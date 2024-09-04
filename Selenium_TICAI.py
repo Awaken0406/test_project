@@ -187,7 +187,7 @@ if __name__ == "__main__":
     #browser.set_window_size(1366,768)
     browser.get('https://www.lottery.gov.cn/jc/zqsgkj/')
     #print(browser.page_source)
-    sleep(1)
+    sleep(2)
 
     start_element = browser.find_element(by.By.ID,"start_date")
     start_element.click()
@@ -211,21 +211,31 @@ if __name__ == "__main__":
     dayBtn = browser.find_element(by.By.XPATH,dayXpathStr)
     dayBtn.click()
 
-    search = browser.find_element(by.By.XPATH,'//*[@id="headerTr"]/div[1]/div[1]/div/a')
-    search.click()
+    searchElement = browser.find_element(by.By.XPATH,'//*[@id="headerTr"]/div[1]/div[1]/div/a')
+    searchElement.click()
     html = etree.HTML(browser.page_source)
+    ParseSource(html)
 
-    pageList = html.xpath('//*[@id="matchList"]/div/div/ul/li/a')
+    pageList = html.xpath('/html/body/div[3]/div[5]/div[2]/div/div/ul/li')
+   #<div class="m-page"><ul><li class="u-pg4">首页</li><li class="u-pg3"><span>1</span></li><li class="u-pg2"><a onclick="jcSgkj.getDataClickPage(2)">2</a></li><li class="u-pg2"><a onclick="jcSgkj.getDataClickPage(3)">3</a></li><li class="u-pg2"><a onclick="jcSgkj.getDataClickPage(4)">4</a></li><li class="u-pg4"><a onclick="jcSgkj.getDataClickPage(4)">尾页</a></li><li>查询结果：有<span class="u-org">104</span>场赛事符合条件</li></ul></div> 
     #需要去除尾页
+    #/html/body/div[3]/div[5]/div[2]/div/div/ul
+    pageLen = len(pageList)
+    i =0
     for page in pageList:
-        
-
+        i += 1
+        #if i == pageLen:
+        #    break
+        pagePathStr = page.getroottree().getpath(page)
+        pageBtn = browser.find_element(by.By.XPATH,pagePathStr)
+        pageBtn.click()
+        html = etree.HTML(browser.page_source)
+        ParseSource(html)
     #//*[@id="headerTr"]/div[1]/div[1]/div/a
 
     #//*[@id="ui-datepicker-div"]/table/tbody/tr[5]/td[1]
     #<input id="start_date" name="start_date" type="text" value="" class="hasDatepicker">
     #<a class="ui-datepicker-prev ui-corner-all" data-handler="prev" data-event="click" title="Prev"><span class="ui-icon ui-icon-circle-triangle-w">Prev</span></a>
 
-    #ParseSource(browser)
-    #PrintResult()
+    PrintResult()
     sleep(100)
