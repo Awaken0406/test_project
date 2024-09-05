@@ -5,13 +5,21 @@ from selenium.webdriver.support.ui import WebDriverWait
 from lxml import etree
 import re
 from selenium.webdriver.common import by
+from datetime import datetime, timedelta
 
-GUID = 1000  
-search = 'all' 
-exceptionValue = 1 #异常值 
-startMonth = 8
-startDay  = 6 
-matchMap = {}
+'''
+Python 中的函数是可以访问其定义范围内(作用域)的变量，这种行为与 Python 的作用域规则(LEGB 规则)有关。
+LEGB 表示 Local(局部)、Enclosing(嵌套)、Global(全局)和 Built-in(内建)四种作用域。
+
+当函数内部引用一个变量时,Python 解释器会按照 LEGB 的顺序查找该变量：
+
+Local(局部)：函数内部定义的局部变量。
+Enclosing(嵌套)：包含当前函数的外层函数中的变量。
+Global(全局)：模块级别的变量。
+Built-in(内建):Python 语言内置的变量。
+因此，当函数在嵌套的情况下，内部函数可以访问外部函数中的局部变量，这是因为 Python 的作用域规则允许函数访问其外部的作用域中的变量。
+这种特性称为闭包(Closure)，即内部函数可以访问外部函数的变量和参数，这使得 Python 中的函数更加灵活和功能强大。
+'''
 
 class MatchData:
     ID = 0
@@ -141,82 +149,54 @@ def ParseSource(html):
         AddToMap(match)
 
 def PrintResult():
+ fileName = f'./requests_test/{searchName}_{startMonth}-{startDay}--{endMonth}-{endDay}.txt'
+ with open(fileName, "w",encoding="utf-8") as file:
     for name, matchList in matchMap.items():
-     for match in matchList:
-        if match.matchName != search and search != 'all':
-           continue
-        print(match.ID,match.date, match.week,match.matchName,match.team1," VS ",match.team2,match.half,match.all,"【"+ match.win,match.flat,match.lose+"】",match.state)
-      
+        for match in matchList:
+            info_str = f"{match.ID} {match.date} {match.week} {match.matchName} {match.team1} VS {match.team2} {match.half} {match.all} 【{match.win}, {match.flat}, {match.lose}】 {match.state}\n"
+            print(info_str,end='')
+            cleaned_str = re.sub(r'\033\[34m|\033\[0m', '', info_str)
+            file.write(cleaned_str)
+        
     print("异常值=",exceptionValue)
     for name, matchList in matchMap.items():
-     for match in matchList:
-        if match.matchName != search and search != 'all':
-           continue
-        if match.exception == True:
-            print("异常",match.ID,match.date,match.matchName, match.team1," VS ",match.team2,match.all,"【"+ match.win,match.flat,match.lose+"】")
+        for match in matchList:
+            if match.exception == True:
+                info_str = f"异常 {match.ID} {match.date} {match.matchName} {match.team1} VS {match.team2} {match.all} 【{match.win}, {match.flat}, {match.lose}】\n"
+                print(info_str,end='')
+                cleaned_str = re.sub(r'\033\[34m|\033\[0m', '', info_str)
+                file.write(cleaned_str)
 
     for name, matchList in matchMap.items():
-     total = len(matchList)
-     num = 0
-     for match in matchList:
-          if match.exception == True:
-               num += 1
-     if(num > 0):
-        print(name,"总场数="+str(total), "异常数="+str(num),"异常率="+str((num / total)*100)+"%")
+        total = len(matchList)
+        num = 0
+        for match in matchList:
+            if match.exception == True:
+                num += 1
+        if(num > 0):
+            float_num = (num / total)*100
+            fstr = "{:.2f}".format(float_num)
+            info_str = f"{name} 总场数={total}, 异常数={num}, 异常率={fstr}%\n"
+            print(info_str,end='')
+            file.write(info_str)
 
     for name, matchList in matchMap.items():
-     total = len(matchList)
-     num = 0
-     for match in matchList:
-          if match.exception == True:
-               num += 1
-     if(num == 0):
-        print("无异常赛事",name,"总场次="+str(total),"异常数=0")
+        total = len(matchList)
+        num = 0
+        for match in matchList:
+            if match.exception == True:
+                num += 1
+        if(num == 0):
+            info_str = f"无异常赛事 {name} 总场次={total} 异常数=0\n"
+            print(info_str,end='')
+            file.write(info_str)
+        
+    file.close()
+      
 
-     
 
-if __name__ == "__main__":
-    
-    option = ChromeOptions() 
-    #option.add_argument('--headless')
-    option.add_experimental_option('excludeSwitches',['enable-automation'])
-    option.add_experimental_option('useAutomationExtension',False)
-
-    browser = webdriver.Chrome(option)
-    browser.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument',{'source' : 'Object.defineProperty(navigator,"webdriver",{get:()=>undefined})'})
-    #browser.set_window_size(1366,768)
-    browser.get('https://www.lottery.gov.cn/jc/zqsgkj/')
-    #print(browser.page_source)
-    sleep(2)
-
-    start_element = browser.find_element(by.By.ID,"start_date")
-    start_element.click()
-    html =etree.HTML(browser.page_source)
-    monthText = html.xpath('//*[@id="ui-datepicker-div"]/div/div//text()')[2]
-    monthNum = chinese_month_dict[monthText]
-    if monthNum > startMonth :
-        btn = browser.find_element(by.By.XPATH,'//*[@id="ui-datepicker-div"]/div/a[1]')
-        btn.click()
-        html =etree.HTML(browser.page_source)
-
-    dayRow = html.xpath('//*[@id="ui-datepicker-div"]/table/tbody/tr')#加上'/td'的话可以直接获取所有td,也就是每个日期
-    dayXpathStr = ''
-    r = 0
-    for row in dayRow:
-        for day in row:
-            t = day.xpath('.//a//text()')
-            if len(t) > 0 and t[0] == str(startDay):
-                dayXpathStr = day.getroottree().getpath(day)
-                break
-    dayBtn = browser.find_element(by.By.XPATH,dayXpathStr)
-    dayBtn.click()
-
-    searchElement = browser.find_element(by.By.XPATH,'//*[@id="headerTr"]/div[1]/div[1]/div/a')
-    searchElement.click()
-    html = etree.HTML(browser.page_source)
-    ParseSource(html)
-
-    pageList = html.xpath('/html/body/div[3]/div[5]/div[2]/div/div/ul/li')
+def LoopPage(html):
+    pageList = html.xpath('/html/body/div[3]/div[5]/div[2]/div/div/ul/li/a')
    #<div class="m-page"><ul><li class="u-pg4">首页</li><li class="u-pg3"><span>1</span></li><li class="u-pg2"><a onclick="jcSgkj.getDataClickPage(2)">2</a></li><li class="u-pg2"><a onclick="jcSgkj.getDataClickPage(3)">3</a></li><li class="u-pg2"><a onclick="jcSgkj.getDataClickPage(4)">4</a></li><li class="u-pg4"><a onclick="jcSgkj.getDataClickPage(4)">尾页</a></li><li>查询结果：有<span class="u-org">104</span>场赛事符合条件</li></ul></div> 
     #需要去除尾页
     #/html/body/div[3]/div[5]/div[2]/div/div/ul
@@ -224,18 +204,125 @@ if __name__ == "__main__":
     i =0
     for page in pageList:
         i += 1
-        #if i == pageLen:
-        #    break
+        if i == pageLen:
+            break
         pagePathStr = page.getroottree().getpath(page)
         pageBtn = browser.find_element(by.By.XPATH,pagePathStr)
         pageBtn.click()
+        sleep(1)
         html = etree.HTML(browser.page_source)
         ParseSource(html)
+
+
+def SelectDate(month,day,element):
+    date_element = browser.find_element(by.By.ID,element)
+    date_element.click()
+    html =etree.HTML(browser.page_source)
+
+    monthText = html.xpath('//*[@id="ui-datepicker-div"]/div/div//text()')[2]
+    monthNum = chinese_month_dict[monthText]
+
+    if monthNum > month:
+        btn = browser.find_element(by.By.XPATH,'//*[@id="ui-datepicker-div"]/div/a[1]') 
+        for i in range(monthNum - month):
+            btn.click()
+            sleep(1) 
+            html =etree.HTML(browser.page_source)
+            btn = browser.find_element(by.By.XPATH,'//*[@id="ui-datepicker-div"]/div/a[1]')           
+        html =etree.HTML(browser.page_source)
+    elif month > monthNum:
+        btn = browser.find_element(by.By.XPATH,'//*[@id="ui-datepicker-div"]/div/a[2]') 
+        for i in range(month - monthNum):
+            btn.click()
+            sleep(1)
+            html =etree.HTML(browser.page_source)
+            btn = browser.find_element(by.By.XPATH,'//*[@id="ui-datepicker-div"]/div/a[2]')                
+        html =etree.HTML(browser.page_source)
+
+    dayRow = html.xpath('//*[@id="ui-datepicker-div"]/table/tbody/tr')#加上'/td'的话可以直接获取所有td,也就是每个日期
+    dayXpathStr = ''
+    r = 0
+    for row in dayRow:
+        for d in row:
+            t = d.xpath('.//a//text()')
+            if len(t) > 0 and t[0] == str(day):
+                dayXpathStr = d.getroottree().getpath(d)
+                break
+    dayBtn = browser.find_element(by.By.XPATH,dayXpathStr)
+    dayBtn.click()
+   
+
+def SearchDate(start_month,start_day,end_month,end_day):
+
+    SelectDate(start_month,start_day,"start_date") 
+    SelectDate(end_month,end_day,"end_date")
+    searchElement = browser.find_element(by.By.XPATH,'//*[@id="headerTr"]/div[1]/div[1]/div/a')
+    searchElement.click()
+    sleep(2)
+    html = etree.HTML(browser.page_source)
+    ParseSource(html)
+    LoopPage(html)
+
+
+if __name__ == "__main__":
+    
+    option = ChromeOptions() 
+    option.add_argument('--headless')
+    option.add_experimental_option('excludeSwitches',['enable-automation'])
+    option.add_experimental_option('useAutomationExtension',False)
+
+    browser = webdriver.Chrome(option)
+    browser.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument',{'source' : 'Object.defineProperty(navigator,"webdriver",{get:()=>undefined})'})
+    #browser.set_window_size(1366,768)
+    browser.get('https://www.lottery.gov.cn/jc/zqsgkj/')
+    sleep(2)
+
+    GUID = 1000  
+    searchName = 'all' #英锦标赛
+    exceptionValue = 1 #异常值 
+    startMonth = 9
+    startDay  = 1 
+    endMonth = 9
+    endDay = 5
+    SearchYear = 2024
+    matchMap = {}
+
+    if(searchName != 'all'):
+        nameBtn =  browser.find_element(by.By.XPATH,'//*[@id="div_sel_competition"]')
+        nameBtn.click()
+        sleep(1) 
+        html =etree.HTML(browser.page_source)
+        nameList = html.xpath('//*[@id="div_league_list"]/a')
+        for name in nameList:
+            if name.text == searchName:
+                namePathStr = name.getroottree().getpath(name)
+                btn = browser.find_element(by.By.XPATH,namePathStr)
+                btn.click()
+                break
+        
+
+    smonth = startMonth
+    sday = startDay
+    emonth = endMonth
+    eday = endDay
+
+    startDate = datetime(year=SearchYear, month=smonth, day=sday)
+    endDate = datetime(year=SearchYear, month=emonth, day=eday)
+    delta = endDate - startDate
+    day_difference =  delta.days 
+    while day_difference > 18:
+            newDate = startDate + timedelta(days=18)
+            SearchDate(startDate.month,startDate.day,newDate.month,newDate.day)
+            startDate = newDate + timedelta(days=1)
+            delta = endDate - startDate
+            day_difference =  delta.days 
+
+    SearchDate(startDate.month,startDate.day,endMonth,endDay)
+    
     #//*[@id="headerTr"]/div[1]/div[1]/div/a
 
     #//*[@id="ui-datepicker-div"]/table/tbody/tr[5]/td[1]
     #<input id="start_date" name="start_date" type="text" value="" class="hasDatepicker">
     #<a class="ui-datepicker-prev ui-corner-all" data-handler="prev" data-event="click" title="Prev"><span class="ui-icon ui-icon-circle-triangle-w">Prev</span></a>
-
     PrintResult()
-    sleep(100)
+    sleep(10)
