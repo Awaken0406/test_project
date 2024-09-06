@@ -24,7 +24,7 @@ BallDataMap = {}
 
 def ParseSource(html):   
     dataList = html.xpath('/html/body/div[2]/div[3]/div[3]/div/table/tbody/tr')
-    for data in dataList:
+    for data in reversed(dataList):
          text = data.xpath('.//text()')
          ball = BallData()
          ball.red = []
