@@ -149,7 +149,7 @@ def ParseSource(html):
         AddToMap(match)
 
 def PrintResult():
- fileName = f'./requests_test/{searchName}_{startMonth}-{startDay}--{endMonth}-{endDay}.txt'
+ fileName = f'./{searchName}_{startMonth}-{startDay}--{endMonth}-{endDay}.txt'
  with open(fileName, "w",encoding="utf-8") as file:
     for name, matchList in matchMap.items():
         for match in matchList:
@@ -219,9 +219,15 @@ def SelectDate(month,day,element):
     date_element.click()
     html =etree.HTML(browser.page_source)
 
-    monthText = html.xpath('//*[@id="ui-datepicker-div"]/div/div//text()')[2]
+    #yearText = html.xpath('//*[@id="ui-datepicker-div"]/div/div/span[1]')
+    Text = html.xpath('//*[@id="ui-datepicker-div"]/div/div//text()')
+    year = int(Text[0])
+    monthText = Text[2]
     monthNum = chinese_month_dict[monthText]
 
+    if SearchYear < year :
+        monthNum += (year - SearchYear) * 12
+        
     if monthNum > month:
         btn = browser.find_element(by.By.XPATH,'//*[@id="ui-datepicker-div"]/div/a[1]') 
         for i in range(monthNum - month):
@@ -267,7 +273,7 @@ def SearchDate(start_month,start_day,end_month,end_day):
 if __name__ == "__main__":
     
     option = ChromeOptions() 
-    option.add_argument('--headless')
+    #option.add_argument('--headless')
     option.add_experimental_option('excludeSwitches',['enable-automation'])
     option.add_experimental_option('useAutomationExtension',False)
 
@@ -278,13 +284,13 @@ if __name__ == "__main__":
     sleep(2)
 
     GUID = 1000  
-    searchName = 'all' #英锦标赛
+    searchName = '欧国联' #英锦标赛
     exceptionValue = 1 #异常值 
     startMonth = 9
     startDay  = 1 
     endMonth = 9
-    endDay = 5
-    SearchYear = 2024
+    endDay = 6
+    SearchYear = 2024#支持年份查询
     matchMap = {}
 
     if(searchName != 'all'):
