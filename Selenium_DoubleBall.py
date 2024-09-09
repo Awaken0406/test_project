@@ -38,21 +38,30 @@ def ParseSource(html):
     
  
 def PrintResult():
-    RedStatistic = defaultdict(int)
-    BlueStatistics = defaultdict(int)
+     RedStatistic = defaultdict(int)
+     BlueStatistics = defaultdict(int)
+     with open(f'./OutPut/DoubleBall_{startDate}_{endDate}.txt', "w",encoding="utf-8") as file:
+          for data in BallDataMap.values():
+               info = f'期数:{data.ID},时间:{data.date},红:{data.red},蓝:[{data.blue}]'
+               print(info)
+               file.write(info+'\n')
+               for num in data.red:
+                    RedStatistic[num] += 1
+               BlueStatistics[data.blue] += 1
 
-    for data in BallDataMap.values():
-         print(f'期数:{data.ID},时间:{data.date},红:{data.red},蓝:[{data.blue}]')
-         for num in data.red:
-              RedStatistic[num] += 1
-         BlueStatistics[data.blue] += 1
-
-    RedStatistic = sorted(RedStatistic.items(), key=lambda x: x[1], reverse=True)
-    BlueStatistics = sorted(BlueStatistics.items(), key=lambda x: x[1], reverse=True)
-    for num, count in RedStatistic:
-        print(f"红:{num} 次数:{count}")
-    for num, count in BlueStatistics:
-        print(f"蓝:{num} 次数:{count}")
+          RedStatistic = sorted(RedStatistic.items(), key=lambda x: x[1], reverse=True)
+          BlueStatistics = sorted(BlueStatistics.items(), key=lambda x: x[1], reverse=True)
+          for num, count in RedStatistic:
+               info = f"红:{num} 次数:{count}"
+               print(info)
+               file.write(info+'\n')
+          print("***********************************")
+          file.write("***********************************"+'\n')
+          for num, count in BlueStatistics:        
+               info = f"蓝:{num} 次数:{count}"
+               print(info)
+               file.write(info+'\n')
+     file.close()
       
 
 
@@ -82,14 +91,14 @@ def SearchDate(start,end):
 if __name__ == "__main__":
     
     option = ChromeOptions() 
-    option.add_argument('--headless')
+    #option.add_argument('--headless')
     option.add_experimental_option('excludeSwitches',['enable-automation'])
     option.add_experimental_option('useAutomationExtension',False)
 
     browser = webdriver.Chrome(option)
     browser.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument',{'source' : 'Object.defineProperty(navigator,"webdriver",{get:()=>undefined})'})
     #browser.set_window_size(1366,768)
-    #browser.maximize_window()
+    browser.maximize_window()
     browser.get('https://www.zhcw.com/kjxx/ssq/')
     sleep(2)
 
@@ -112,4 +121,4 @@ if __name__ == "__main__":
 
     SearchDate(start,end)
     PrintResult()
-    sleep(10)
+    sleep(2)
