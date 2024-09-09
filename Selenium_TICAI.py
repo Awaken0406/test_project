@@ -78,7 +78,7 @@ def IsException(str1,str2,str3):
     number2 = float(result2)
     number3 = float(result3)
     e = False
-    if number1 - 1 > number2 or number1 - 1 > number3:
+    if number1 - exceptionValue > number2 or number1 - exceptionValue > number3:
           e = True
     return e
 
@@ -149,11 +149,12 @@ def ParseSource(html):
         AddToMap(match)
 
 def PrintResult():
- fileName = f'./{searchName}_{startMonth}-{startDay}--{endMonth}-{endDay}.txt'
+ fileName = f'./OutPut/{searchName}_{startMonth}-{startDay}_{endMonth}-{endDay}.txt'
  with open(fileName, "w",encoding="utf-8") as file:
     for name, matchList in matchMap.items():
         for match in matchList:
-            info_str = f"{match.ID} {match.date} {match.week} {match.matchName} {match.team1} VS {match.team2} {match.half} {match.all} 【{match.win}, {match.flat}, {match.lose}】 {match.state}\n"
+          if match.exception == False:
+            info_str = f"无异常 {match.ID} {match.date} {match.week} {match.matchName} {match.team1} VS {match.team2} {match.half} {match.all} 【{match.win}, {match.flat}, {match.lose}】 {match.state}\n"
             print(info_str,end='')
             cleaned_str = re.sub(r'\033\[34m|\033\[0m', '', info_str)
             file.write(cleaned_str)
@@ -173,23 +174,12 @@ def PrintResult():
         for match in matchList:
             if match.exception == True:
                 num += 1
-        if(num > 0):
-            float_num = (num / total)*100
-            fstr = "{:.2f}".format(float_num)
-            info_str = f"{name} 总场数={total}, 异常数={num}, 异常率={fstr}%\n"
-            print(info_str,end='')
-            file.write(info_str)
-
-    for name, matchList in matchMap.items():
-        total = len(matchList)
-        num = 0
-        for match in matchList:
-            if match.exception == True:
-                num += 1
-        if(num == 0):
-            info_str = f"无异常赛事 {name} 总场次={total} 异常数=0\n"
-            print(info_str,end='')
-            file.write(info_str)
+        
+        float_num = (num / total)*100
+        fstr = "{:.2f}".format(float_num)
+        info_str = f"{name} 总场数={total}, 异常数={num}, 异常率={fstr}%\n"
+        print(info_str,end='')
+        file.write(info_str)      
         
     file.close()
       
@@ -219,15 +209,9 @@ def SelectDate(month,day,element):
     date_element.click()
     html =etree.HTML(browser.page_source)
 
-    #yearText = html.xpath('//*[@id="ui-datepicker-div"]/div/div/span[1]')
-    Text = html.xpath('//*[@id="ui-datepicker-div"]/div/div//text()')
-    year = int(Text[0])
-    monthText = Text[2]
+    monthText = html.xpath('//*[@id="ui-datepicker-div"]/div/div//text()')[2]
     monthNum = chinese_month_dict[monthText]
 
-    if SearchYear < year :
-        monthNum += (year - SearchYear) * 12
-        
     if monthNum > month:
         btn = browser.find_element(by.By.XPATH,'//*[@id="ui-datepicker-div"]/div/a[1]') 
         for i in range(monthNum - month):
@@ -273,7 +257,7 @@ def SearchDate(start_month,start_day,end_month,end_day):
 if __name__ == "__main__":
     
     option = ChromeOptions() 
-    #option.add_argument('--headless')
+    option.add_argument('--headless')
     option.add_experimental_option('excludeSwitches',['enable-automation'])
     option.add_experimental_option('useAutomationExtension',False)
 
@@ -285,13 +269,17 @@ if __name__ == "__main__":
 
     GUID = 1000  
     searchName = '欧国联' #英锦标赛
-    exceptionValue = 1 #异常值 
-    startMonth = 9
+    exceptionValue = 0 #异常值  
+    SearchYear = 2024
+    matchMap = {}
+
+
+
+    startMonth = 7
     startDay  = 1 
     endMonth = 9
-    endDay = 6
-    SearchYear = 2024#支持年份查询
-    matchMap = {}
+    endDay = 7
+ 
 
     if(searchName != 'all'):
         nameBtn =  browser.find_element(by.By.XPATH,'//*[@id="div_sel_competition"]')
