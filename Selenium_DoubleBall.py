@@ -12,9 +12,12 @@ class BallData:
      ID = ''
      date = ''
      red = []
-     blue = ''
+     blue = 0
+     duplicates_red = {}
+     duplicates_blue = {}
 
 BallDataMap = {}
+BallDataList = []
 
 '''
 在 Python 中，类的数据成员（类属性）在类定义中被初始化为可变对象（如列表）时，
@@ -34,8 +37,46 @@ def ParseSource(html):
               ball.red.append(int(text[i]))
          ball.blue = int(text[8])
          BallDataMap[ball.ID] = ball
-    
-    
+         BallDataList.append(ball)
+
+
+def Analyse():
+     
+     for i in range(len(BallDataList)):
+          ball = BallDataList[i]
+          id = 0
+          ball.duplicates_red = {}
+          ball.duplicates_blue = {}
+          for num in range(i+1,i+1+nearNum):
+                    if(num >= len(BallDataList)):
+                         break
+                    id += 1
+                    set1 = set(ball.red)
+                    set2 = set(BallDataList[num].red)
+                    duplicates = set1.intersection(set2)
+                    if len(duplicates) > 0:
+                         ball.duplicates_red[id] = list(duplicates)
+                    if ball.blue == BallDataList[num].blue:
+                         ball.duplicates_blue[id] = ball.blue
+     redNum = 0
+     blueNum = 0
+     for data in BallDataList:      
+          info = f'期数:{data.ID},时间:{data.date},红:{data.red},蓝:[{data.blue}]'
+          #print(info)
+          if len(data.duplicates_red) > 0:
+               print('红',data.duplicates_red)
+               redNum += 1
+          if len(data.duplicates_blue) > 0:
+               print('蓝',data.duplicates_blue)
+               blueNum += 1
+     print(f'总期数:{len(BallDataList)},红:{redNum},蓝:{blueNum}')
+
+
+def Recommend():
+     pass
+ 
+
+
  
 def PrintResult():
      RedStatistic = defaultdict(int)
@@ -66,6 +107,8 @@ def PrintResult():
 
 
 
+
+
 def SearchDate(start,end):
     custom = browser.find_element(by.By.XPATH,'/html/body/div[2]/div[3]/div[2]/div[1]/div/div[1]/strong')
     custom.click()
@@ -91,7 +134,7 @@ def SearchDate(start,end):
 if __name__ == "__main__":
     
     option = ChromeOptions() 
-    #option.add_argument('--headless')
+    option.add_argument('--headless')
     option.add_experimental_option('excludeSwitches',['enable-automation'])
     option.add_experimental_option('useAutomationExtension',False)
 
@@ -102,7 +145,7 @@ if __name__ == "__main__":
     browser.get('https://www.zhcw.com/kjxx/ssq/')
     sleep(2)
 
-    GUID = 1000  
+    nearNum = 1 
     startDate = '2024-01-01'
     endDate = datetime.now().date().strftime('%Y-%m-%d')
 
@@ -120,5 +163,6 @@ if __name__ == "__main__":
             diff =  delta.days 
 
     SearchDate(start,end)
-    PrintResult()
+    #PrintResult()
+    Analyse()
     sleep(2)
