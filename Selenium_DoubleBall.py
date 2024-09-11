@@ -104,7 +104,7 @@ if __name__ == "__main__":
 
     GUID = 1000  
     startDate = '2024-01-01'
-    endDate = '2024-09-06'
+    endDate = datetime.now().date().strftime('%Y-%m-%d')
 
     start = datetime.strptime(startDate,'%Y-%m-%d')
     end = datetime.strptime(endDate,'%Y-%m-%d')
