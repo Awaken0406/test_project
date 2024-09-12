@@ -129,7 +129,12 @@ def Recommend():
 
      recommend_red = []
      recommend_blue = []
-     for i in range(recommendCount):
+     current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+     with open(f'./OutPut/DoubleBall_Recommend.txt', "a",encoding="utf-8") as file:
+           
+       print(f'recommend:{current_time_str}')    
+       file.write(f'recommend:{current_time_str}\n')
+       for i in range(recommendCount):
           recommend_red = []
           recommend_blue = []
           while True:
@@ -150,7 +155,12 @@ def Recommend():
                          recommend_blue.append(num)
                     if(len(recommend_blue) == 2):
                          break
-          print(f"recommend i:{i},red:{recommend_red},blue:{recommend_blue}")
+          recommend_red.sort()
+          recommend_blue.sort()
+          print(f"{recommend_red}--{recommend_blue}")
+          file.write(f"{recommend_red}--{recommend_blue}\n")
+     file.write('\n')
+     file.close()
 
 def PrintResult():
      global RedTotalTimes
@@ -199,7 +209,7 @@ def SearchDate(start,end):
 
 
 if __name__ == "__main__":
-    
+      
     option = ChromeOptions() 
     option.add_argument('--headless')
     option.add_experimental_option('excludeSwitches',['enable-automation'])
