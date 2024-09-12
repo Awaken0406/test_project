@@ -7,6 +7,8 @@ import re
 from selenium.webdriver.common import by
 from datetime import datetime, timedelta
 from collections import defaultdict
+import random
+import time
 
 class BallData:
      ID = ''
@@ -18,6 +20,8 @@ class BallData:
 
 BallDataMap = {}
 BallDataList = []
+RedTotalTimes = defaultdict(int)
+BlueTotalTimes = defaultdict(int)
 
 '''
 在 Python 中，类的数据成员（类属性）在类定义中被初始化为可变对象（如列表）时，
@@ -41,7 +45,8 @@ def ParseSource(html):
 
 
 def Analyse():
-     
+     global RedTotalTimes
+     global BlueTotalTimes
      for i in range(len(BallDataList)):
           ball = BallDataList[i]
           id = 0
@@ -58,49 +63,111 @@ def Analyse():
                          ball.duplicates_red[id] = list(duplicates)
                     if ball.blue == BallDataList[num].blue:
                          ball.duplicates_blue[id] = ball.blue
-     redNum = 0
-     blueNum = 0
-     for data in BallDataList:      
-          info = f'期数:{data.ID},时间:{data.date},红:{data.red},蓝:[{data.blue}]'
-          #print(info)
-          if len(data.duplicates_red) > 0:
-               print('红',data.duplicates_red)
-               redNum += 1
-          if len(data.duplicates_blue) > 0:
-               print('蓝',data.duplicates_blue)
-               blueNum += 1
-     print(f'总期数:{len(BallDataList)},红:{redNum},蓝:{blueNum}')
+     
+     redNum = defaultdict(int)
+     redTimes = defaultdict(int)
+     blueTimes = defaultdict(int)
+     for data in BallDataList:    
+          for k,numList in data.duplicates_red.items():
+               redNum[len(numList)]+=1
+               redTimes[k]+=1
+          for k,numList in data.duplicates_blue.items():
+               blueTimes[k]+=1
+
+          #print(f'ID:{data.ID},date:{data.date},red:{data.red},blue:[{data.blue}]')
+          #print('red',data.duplicates_red)
+          #print('blue',data.duplicates_blue)
+     
+          for num in data.red:
+               RedTotalTimes[num] += 1
+               BlueTotalTimes[data.blue] += 1
+
+     RedTotalTimes = sorted(RedTotalTimes.items(), key=lambda x: x[1], reverse=True)
+     BlueTotalTimes = sorted(BlueTotalTimes.items(), key=lambda x: x[1], reverse=True)
+
+     len1 = int(len(RedTotalTimes)/2)
+     len2 = int(len(BlueTotalTimes)/2)
+     index1 = 0
+     index2 = 0
+     for num, count in RedTotalTimes: 
+          index1+=1
+          if index1 > len1:
+               break
+          redTopKeys.append(num)
+     for num, count in BlueTotalTimes: 
+          index2+=1
+          if index2 > len2:
+               break
+          blueTopKeys.append(num)
+
+     print(f'total:{len(BallDataList)},nearNum:{nearNum},redNum:{redNum},redTimes:{redTimes},blueTimes:{blueTimes}')
+     print("RedTotalTimes:",RedTotalTimes)
+     print("BlueTotalTimes:",BlueTotalTimes)
+     print("redTopKeys:",redTopKeys)     
+     print("blueTopKeys:",blueTopKeys)   
+   
 
 
 def Recommend():
-     pass
- 
 
+     #total:90,nearNum:3,redNum:defaultdict(<class 'int'>, {2: 63, 1: 115, 3: 11}),blueNum:defaultdict(<class 'int'>, {3: 5, 1: 6, 2: 6})
 
- 
+     redFilterNumber = []
+     blueFilterNumber = []
+     filterCountTT = filterCount = 3
+     recommendCount = 5
+
+     for ball in reversed(BallDataList):    
+          if filterCount == 0:
+               break
+          filterCount -= 1
+          redFilterNumber += ball.red
+          blueFilterNumber.append(ball.blue)
+     redFilterNumber = list(set(redFilterNumber))
+     blueFilterNumber = list(set(blueFilterNumber))
+     print(f'filterCount:{filterCountTT},filter_red:{redFilterNumber},filter_blue:{blueFilterNumber}')
+
+     recommend_red = []
+     recommend_blue = []
+     for i in range(recommendCount):
+          recommend_red = []
+          recommend_blue = []
+          while True:
+               num = random.randint(1, 33)
+               if num not in recommend_red and num in redTopKeys:
+                    if len(redFilterNumber)+len(recommend_red) <  len(redTopKeys):
+                         if num not in redFilterNumber:
+                              recommend_red.append(num)
+                    else:
+                         recommend_red.append(num)
+               if(len(recommend_red) == 6):
+                    break
+
+          while True:
+               num = random.randint(1, 16)
+               if num not in recommend_blue:
+                    if num not in blueFilterNumber and num in blueTopKeys:
+                         recommend_blue.append(num)
+                    if(len(recommend_blue) == 2):
+                         break
+          print(f"recommend i:{i},red:{recommend_red},blue:{recommend_blue}")
+
 def PrintResult():
-     RedStatistic = defaultdict(int)
-     BlueStatistics = defaultdict(int)
+     global RedTotalTimes
+     global BlueTotalTimes
      with open(f'./OutPut/DoubleBall_{startDate}_{endDate}.txt', "w",encoding="utf-8") as file:
           for data in BallDataMap.values():
-               info = f'期数:{data.ID},时间:{data.date},红:{data.red},蓝:[{data.blue}]'
+               info = f'ID:{data.ID},date:{data.date},red:{data.red},blue:[{data.blue}]'
                print(info)
                file.write(info+'\n')
-               for num in data.red:
-                    RedStatistic[num] += 1
-               BlueStatistics[data.blue] += 1
 
-          RedStatistic = sorted(RedStatistic.items(), key=lambda x: x[1], reverse=True)
-          BlueStatistics = sorted(BlueStatistics.items(), key=lambda x: x[1], reverse=True)
-          for num, count in RedStatistic:
-               info = f"红:{num} 次数:{count}"
-               print(info)
+          for num, count in RedTotalTimes:
+               info = f"rd:{num} times:{count}"
                file.write(info+'\n')
           print("***********************************")
           file.write("***********************************"+'\n')
-          for num, count in BlueStatistics:        
-               info = f"蓝:{num} 次数:{count}"
-               print(info)
+          for num, count in BlueTotalTimes:        
+               info = f"blue:{num} times:{count}"
                file.write(info+'\n')
      file.close()
       
@@ -144,8 +211,13 @@ if __name__ == "__main__":
     browser.maximize_window()
     browser.get('https://www.zhcw.com/kjxx/ssq/')
     sleep(2)
+    current_time = time.time()
+    random.seed(current_time)
 
-    nearNum = 1 
+    redTopKeys = []
+    blueTopKeys = []
+
+    nearNum = 3
     startDate = '2024-01-01'
     endDate = datetime.now().date().strftime('%Y-%m-%d')
 
@@ -165,4 +237,5 @@ if __name__ == "__main__":
     SearchDate(start,end)
     #PrintResult()
     Analyse()
+    Recommend()
     sleep(2)
