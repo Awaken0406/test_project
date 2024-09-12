@@ -1,0 +1,5 @@
+recommend i:0,red:[3, 8, 19, 23, 12, 21],blue:[3, 6]
+recommend i:1,red:[8, 10, 7, 23, 6, 25],blue:[13, 3]
+recommend i:2,red:[22, 7, 3, 1, 21, 25],blue:[5, 6]
+recommend i:3,red:[1, 10, 3, 20, 32, 22],blue:[16, 5]
+recommend i:4,red:[18, 25, 32, 21, 1, 12],blue:[6, 5]
