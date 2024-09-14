@@ -90,7 +90,7 @@ def Analyse():
      
           for num in data.red:
                RedTotalTimes[num] += 1
-               BlueTotalTimes[data.blue] += 1
+          BlueTotalTimes[data.blue] += 1
      print(f'Total:{len(BallDataList)},blueExistCount:{blueExistCount}')
      RedTotalTimes = sorted(RedTotalTimes.items(), key=lambda x: x[1], reverse=True)
      BlueTotalTimes = sorted(BlueTotalTimes.items(), key=lambda x: x[1], reverse=True)
