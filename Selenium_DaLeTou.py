@@ -8,6 +8,7 @@ from selenium.webdriver.common import by
 from datetime import datetime, timedelta
 from collections import defaultdict
 import time
+import random
 
 class BallData:
      ID = ''
@@ -16,10 +17,14 @@ class BallData:
      after = []
      hit = 0
      hitAdd = 0
+     duplicates_red = {}
+     duplicates_blue = {}
 
 BallDataMap = {}
+BallDataList = []
 
-
+RedTotalTimes = defaultdict(int)
+BlueTotalTimes = defaultdict(int)
 
     
  
@@ -81,11 +86,151 @@ def ParseSource(html):
          ball.hit = int(text[9])
          ball.hitAdd = int(text[11])
          BallDataMap[ball.ID] = ball
+         BallDataList.append(ball)
          tt = datetime.strptime(ball.date,'%Y-%m-%d').date()
          if tt < tempDate:
               tempDate = tt
     return tempDate
 
+
+
+def Analyse():
+     global RedTotalTimes
+     global BlueTotalTimes
+     global BallDataList
+     BallDataList = BallDataList[::-1]
+     redExistCount = 0
+     blueExistCount = 0
+     for i in range(len(BallDataList)):
+          ball = BallDataList[i]
+          id = 0
+          ball.duplicates_red = {}
+          ball.duplicates_blue = {}
+          for num in range(i+1,i+1+nearNum):
+                    if(num >= len(BallDataList)):
+                         break
+                    id += 1
+                    set1 = set(ball.front)
+                    set2 = set(BallDataList[num].front)
+                    duplicates = set1.intersection(set2)
+                    if len(duplicates) > 0:
+                         ball.duplicates_red[id] = list(duplicates)
+                         redExistCount += 1
+                    set1 = set(ball.after)
+                    set2 = set(BallDataList[num].after)
+                    duplicates = set1.intersection(set2)
+                    if len(duplicates) > 0:
+                         ball.duplicates_blue[id] = list(duplicates)
+                         blueExistCount += 1
+
+     
+     redNum = defaultdict(int)
+     redTimes = defaultdict(int)
+     blueTimes = defaultdict(int)
+     for data in BallDataList:    
+          for k,numList in data.duplicates_red.items():
+               redNum[len(numList)]+=1
+               redTimes[k]+=1
+          for k,numList in data.duplicates_blue.items():
+               blueTimes[k]+=1
+
+          #print(f'ID:{data.ID},date:{data.date},red:{data.red},blue:[{data.blue}]')
+          print('red',data.duplicates_red)
+          print('blue',data.duplicates_blue)
+     
+          for num in data.front:
+               RedTotalTimes[num] += 1
+          for num in data.after:
+               BlueTotalTimes[num] += 1
+     print(f'Total:{len(BallDataList)},redExistCount:{redExistCount},blueExistCount:{blueExistCount}')
+     RedTotalTimes = sorted(RedTotalTimes.items(), key=lambda x: x[1], reverse=True)
+     BlueTotalTimes = sorted(BlueTotalTimes.items(), key=lambda x: x[1], reverse=True)
+
+     len1 = int(len(RedTotalTimes)/2)
+     len2 = int(len(BlueTotalTimes)/2)
+     index1 = 0
+     index2 = 0
+     for num, count in RedTotalTimes: 
+          index1+=1
+          if index1 > len1:
+               break
+          redTopKeys.append(num)
+     for num, count in BlueTotalTimes: 
+          index2+=1
+          if index2 > len2:
+               break
+          blueTopKeys.append(num)
+
+     print(f'total:{len(BallDataList)},nearNum:{nearNum},redNum:{redNum},redTimes:{redTimes},blueTimes:{blueTimes}')
+     print("RedTotalTimes:",RedTotalTimes)
+     print("BlueTotalTimes:",BlueTotalTimes)
+     print("redTopKeys:",redTopKeys)     
+     print("blueTopKeys:",blueTopKeys)   
+   
+
+
+def Recommend():
+     redFilterNumber = []
+     blueFilterNumber = []
+     filterCountTT = filterCount = 3
+     recommendCount = 3
+
+     for ball in BallDataList:    
+          if filterCount == 0:
+               break
+          filterCount -= 1
+          redFilterNumber += ball.front
+
+     bluefilterCountTT = bluefilterCount = 5
+     for ball in BallDataList:    
+          if bluefilterCount == 0:
+               break
+          bluefilterCount -= 1
+          blueFilterNumber += ball.after
+     redFilterNumber = list(set(redFilterNumber))
+     blueFilterNumber = list(set(blueFilterNumber))
+     print(f'RedfilterCount:{filterCountTT},BluefilterCount:{bluefilterCountTT},filter_red:{redFilterNumber},filter_blue:{blueFilterNumber}')
+
+     recommend_red = []
+     recommend_blue = []
+     current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+     with open(f'./OutPut/DaLeTou_Recommend.txt', "a",encoding="utf-8") as file:
+           
+       print(f'recommend:{current_time_str}')    
+       file.write(f'recommend:{current_time_str}\n')
+       for i in range(recommendCount):
+          recommend_red = []
+          recommend_blue = []
+          while True:
+               sleep(0.2)
+               t = int(time.time() * 10000000)
+               random.seed(t)
+               num = random.randint(1, 33)
+               if num not in recommend_red and num in redTopKeys:
+                    if len(redFilterNumber)+len(recommend_red) <  len(redTopKeys):
+                         if num not in redFilterNumber:
+                              recommend_red.append(num)
+                    else:
+                         recommend_red.append(num)
+               if(len(recommend_red) == 6):
+                    break
+
+          while True:
+               sleep(0.2)
+               t = int(time.time() * 10000000)
+               random.seed(t)
+               num = random.randint(1, 16)
+               if num not in recommend_blue:
+                    if num not in blueFilterNumber:
+                         recommend_blue.append(num)
+                    if(len(recommend_blue) == 2):
+                         break
+          recommend_red.sort()
+          recommend_blue.sort()
+          print(f"{recommend_red}--{recommend_blue}")
+          file.write(f"{recommend_red}--{recommend_blue}\n")
+       file.write("\n")
+     file.close()
 
 if __name__ == "__main__":
     
@@ -102,6 +247,9 @@ if __name__ == "__main__":
     sleep(2)
  
     startDate = '2024-01-01'
+    nearNum = 5
+    redTopKeys = []
+    blueTopKeys = []
 
     start = datetime.strptime(startDate,'%Y-%m-%d').date()
     child_frame = browser.find_element(by.By.XPATH,'//*[@id="iFrame1"]')
@@ -118,5 +266,7 @@ if __name__ == "__main__":
           nextBtn = browser.find_element(by.By.XPATH,'/html/body/div/div/div[3]/ul/li[13]')
           nextBtn.click()
 
-    PrintResult()
+    #PrintResult()
+    Analyse()
+    Recommend()
     sleep(2)
