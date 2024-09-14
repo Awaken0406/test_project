@@ -51,7 +51,6 @@ def Analyse():
           ball = BallDataList[i]
           id = 0
           ball.duplicates_red = {}
-          ball.duplicates_blue = {}
           for num in range(i+1,i+1+nearNum):
                     if(num >= len(BallDataList)):
                          break
@@ -61,8 +60,19 @@ def Analyse():
                     duplicates = set1.intersection(set2)
                     if len(duplicates) > 0:
                          ball.duplicates_red[id] = list(duplicates)
+
+     blueExistCount = 0
+     for i in range(len(BallDataList)):
+          ball = BallDataList[i]
+          id = 0
+          ball.duplicates_blue = {}
+          for num in range(i+1,i+1+nearNum):
+                    if(num >= len(BallDataList)):
+                         break
+                    id += 1
                     if ball.blue == BallDataList[num].blue:
                          ball.duplicates_blue[id] = ball.blue
+                         blueExistCount += 1
      
      redNum = defaultdict(int)
      redTimes = defaultdict(int)
@@ -76,12 +86,12 @@ def Analyse():
 
           #print(f'ID:{data.ID},date:{data.date},red:{data.red},blue:[{data.blue}]')
           #print('red',data.duplicates_red)
-          #print('blue',data.duplicates_blue)
+          print('blue',data.duplicates_blue)
      
           for num in data.red:
                RedTotalTimes[num] += 1
                BlueTotalTimes[data.blue] += 1
-
+     print(f'Total:{len(BallDataList)},blueExistCount:{blueExistCount}')
      RedTotalTimes = sorted(RedTotalTimes.items(), key=lambda x: x[1], reverse=True)
      BlueTotalTimes = sorted(BlueTotalTimes.items(), key=lambda x: x[1], reverse=True)
 
@@ -109,23 +119,26 @@ def Analyse():
 
 
 def Recommend():
-
-     #total:90,nearNum:3,redNum:defaultdict(<class 'int'>, {2: 63, 1: 115, 3: 11}),blueNum:defaultdict(<class 'int'>, {3: 5, 1: 6, 2: 6})
-
      redFilterNumber = []
      blueFilterNumber = []
      filterCountTT = filterCount = 3
-     recommendCount = 5
+     recommendCount = 3
 
      for ball in reversed(BallDataList):    
           if filterCount == 0:
                break
           filterCount -= 1
           redFilterNumber += ball.red
+
+     bluefilterCountTT = bluefilterCount = 5
+     for ball in reversed(BallDataList):    
+          if bluefilterCount == 0:
+               break
+          bluefilterCount -= 1
           blueFilterNumber.append(ball.blue)
      redFilterNumber = list(set(redFilterNumber))
      blueFilterNumber = list(set(blueFilterNumber))
-     print(f'filterCount:{filterCountTT},filter_red:{redFilterNumber},filter_blue:{blueFilterNumber}')
+     print(f'RedfilterCount:{filterCountTT},BluefilterCount:{bluefilterCountTT},filter_red:{redFilterNumber},filter_blue:{blueFilterNumber}')
 
      recommend_red = []
      recommend_blue = []
@@ -138,6 +151,9 @@ def Recommend():
           recommend_red = []
           recommend_blue = []
           while True:
+               sleep(0.2)
+               t = int(time.time() * 10000000)
+               random.seed(t)
                num = random.randint(1, 33)
                if num not in recommend_red and num in redTopKeys:
                     if len(redFilterNumber)+len(recommend_red) <  len(redTopKeys):
@@ -149,9 +165,12 @@ def Recommend():
                     break
 
           while True:
+               sleep(0.2)
+               t = int(time.time() * 10000000)
+               random.seed(t)
                num = random.randint(1, 16)
                if num not in recommend_blue:
-                    if num not in blueFilterNumber and num in blueTopKeys:
+                    if num not in blueFilterNumber:
                          recommend_blue.append(num)
                     if(len(recommend_blue) == 2):
                          break
@@ -159,7 +178,7 @@ def Recommend():
           recommend_blue.sort()
           print(f"{recommend_red}--{recommend_blue}")
           file.write(f"{recommend_red}--{recommend_blue}\n")
-     file.write('\n')
+       file.write("\n")
      file.close()
 
 def PrintResult():
@@ -221,13 +240,13 @@ if __name__ == "__main__":
     browser.maximize_window()
     browser.get('https://www.zhcw.com/kjxx/ssq/')
     sleep(2)
-    current_time = time.time()
-    random.seed(current_time)
+    t = int(time.time() * 10000000)
+    random.seed(t)
 
     redTopKeys = []
     blueTopKeys = []
 
-    nearNum = 3
+    nearNum = 5
     startDate = '2024-01-01'
     endDate = datetime.now().date().strftime('%Y-%m-%d')
 
