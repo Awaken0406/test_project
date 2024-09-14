@@ -135,7 +135,7 @@ def Analyse():
                blueTimes[k]+=1
 
           #print(f'ID:{data.ID},date:{data.date},red:{data.red},blue:[{data.blue}]')
-          print('red',data.duplicates_red)
+          #print('red',data.duplicates_red)
           print('blue',data.duplicates_blue)
      
           for num in data.front:
@@ -181,7 +181,7 @@ def Recommend():
           filterCount -= 1
           redFilterNumber += ball.front
 
-     bluefilterCountTT = bluefilterCount = 5
+     bluefilterCountTT = bluefilterCount = 2
      for ball in BallDataList:    
           if bluefilterCount == 0:
                break
@@ -205,21 +205,21 @@ def Recommend():
                sleep(0.2)
                t = int(time.time() * 10000000)
                random.seed(t)
-               num = random.randint(1, 33)
-               if num not in recommend_red and num in redTopKeys:
+               num = random.randint(1, 35)
+               if num not in recommend_red: #and num in redTopKeys:
                     if len(redFilterNumber)+len(recommend_red) <  len(redTopKeys):
                          if num not in redFilterNumber:
                               recommend_red.append(num)
                     else:
                          recommend_red.append(num)
-               if(len(recommend_red) == 6):
+               if(len(recommend_red) == 5):
                     break
 
           while True:
                sleep(0.2)
                t = int(time.time() * 10000000)
                random.seed(t)
-               num = random.randint(1, 16)
+               num = random.randint(1, 12)
                if num not in recommend_blue:
                     if num not in blueFilterNumber:
                          recommend_blue.append(num)
@@ -269,4 +269,3 @@ if __name__ == "__main__":
     #PrintResult()
     Analyse()
     Recommend()
-    sleep(2)
