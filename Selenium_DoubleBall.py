@@ -267,4 +267,3 @@ if __name__ == "__main__":
     #PrintResult()
     Analyse()
     Recommend()
-    sleep(2)
