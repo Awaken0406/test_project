@@ -6,7 +6,7 @@ reset_color = "\033[0m"
 
 
 
-def Print_Double():
+def Print_Double(AllDataList):
     one=two=three=four=five=six=0
     for data in AllDataList:
         if data.front_hit_count == 6 and data.back_hit_count == 1:
@@ -19,16 +19,40 @@ def Print_Double():
              four += 1
         elif (data.front_hit_count == 4 and data.back_hit_count == 0) or (data.front_hit_count == 3 and data.back_hit_count == 1):
              five += 1
-        if (data.front_hit_count == 2 or data.front_hit_count == 1 or data.front_hit_count == 0) and data.back_hit_count == 1:
+        elif (data.front_hit_count == 2 or data.front_hit_count == 1 or data.front_hit_count == 0) and data.back_hit_count == 1:
              six += 1
 
     money = one*6000000 + two*100000 + three*3000 + four*200 + five*10 + six*5   
     print(f'Total:{len(AllDataList)}')
-    print(f'{blue_color}one:{one},two:{two},three:{three},four:{four},five:{five},six:{six}{reset_color}')
+    print(f'{blue_color}One:{one},Two:{two},Three:{three},Four:{four},Five:{five},Six:{six}{reset_color}')
     print(f'{blue_color}money:{money}{reset_color}')
 
-def Print_DaLeTou():
-    pass
+def Print_DaLeTou(AllDataList):
+    one=two=three=four=five=six=seven=eight=nine = 0
+    for data in AllDataList:
+        if data.front_hit_count == 5 and data.back_hit_count == 2:
+            one += 1
+        elif data.front_hit_count == 5 and data.back_hit_count == 1:
+            two += 1
+        elif data.front_hit_count == 5 and data.back_hit_count == 0:
+            three += 1
+        elif (data.front_hit_count == 4 and data.back_hit_count == 2):
+             four += 1
+        elif (data.front_hit_count == 4 and data.back_hit_count == 1):
+             five += 1
+        elif data.front_hit_count == 3  and data.back_hit_count == 2:
+             six += 1
+        elif (data.front_hit_count == 4 and data.back_hit_count == 0):
+             seven += 1
+        elif (data.front_hit_count == 3 and data.back_hit_count == 1) or (data.front_hit_count == 2 and data.back_hit_count == 2):
+             eight += 1
+        elif (data.front_hit_count == 3 and data.back_hit_count == 0) or (data.front_hit_count == 1 and data.back_hit_count == 2) or (data.front_hit_count == 2 and data.back_hit_count == 1) or (data.front_hit_count == 0 and data.back_hit_count == 2):
+             nine += 1
+
+    money = one*10000000 + two*100000 + three*10000 + four*3000 + five*300 + six*200 + seven*100 + eight*15 + nine*5
+    print(f'Total:{len(AllDataList)}')
+    print(f'{blue_color}One:{one},Two:{two},Three:{three},Four:{four},Five:{five},Six:{six},Seven:{seven},Eight:{eight},Nine:{nine}{reset_color}')
+    print(f'{blue_color}money:{money}{reset_color}')
 
 if __name__ == "__main__":
     
@@ -36,8 +60,8 @@ if __name__ == "__main__":
     with open('./OutPut/DoubleBall_Recommend.txt', 'r') as file:
         content = file.readlines()
 
-    find_front = [6, 18, 19, 20, 22, 32]
-    find_back = [6]
+    find_front = [4, 14, 16, 21, 25]
+    find_back = [3, 8]
 
     class DataList:
         front = []
@@ -100,5 +124,5 @@ if __name__ == "__main__":
     for data in AllDataList:
         if data.allHit == True:
             print(f'All Hit :[{data.frontStr}]--[{data.backStr}]')
-    Print_Double()
-    #Print_DaLeTou()
+    Print_Double(AllDataList)
+    #Print_DaLeTou(AllDataList)
