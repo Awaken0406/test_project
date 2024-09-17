@@ -21,7 +21,6 @@ class BallData:
      duplicates_blue = {}
 
 BallDataMap = {}
-BallDataList = []
 
 RedTotalTimes = defaultdict(int)
 BlueTotalTimes = defaultdict(int)
@@ -58,7 +57,7 @@ def PrintResult():
       
 
 
-def ParseSource(html):   
+def ParseSource(html,BallDataList): 
     dataList = html.xpath('//*[@id="historyData"]/tr')
     tempDate = datetime.now().date()
     skip_remaining = False
@@ -86,38 +85,37 @@ def ParseSource(html):
          ball.hit = int(text[9])
          ball.hitAdd = int(text[11])
          BallDataMap[ball.ID] = ball
-         BallDataList.append(ball)
+         BallDataList.append(ball)#默认降序
          tt = datetime.strptime(ball.date,'%Y-%m-%d').date()
          if tt < tempDate:
-              tempDate = tt
+              tempDate = tt 
     return tempDate
 
 
 
-def Analyse():
+def Analyse(BallDataList):
      global RedTotalTimes
      global BlueTotalTimes
-     global BallDataList
-     BallDataList = BallDataList[::-1]
+     UpList = BallDataList[::-1]#默认降序
      redExistCount = 0
      blueExistCount = 0
-     for i in range(len(BallDataList)):
-          ball = BallDataList[i]
+     for i in range(len(UpList)):
+          ball = UpList[i]
           id = 0
           ball.duplicates_red = {}
           ball.duplicates_blue = {}
           for num in range(i+1,i+1+nearNum):
-                    if(num >= len(BallDataList)):
+                    if(num >= len(UpList)):
                          break
                     id += 1
                     set1 = set(ball.front)
-                    set2 = set(BallDataList[num].front)
+                    set2 = set(UpList[num].front)
                     duplicates = set1.intersection(set2)
                     if len(duplicates) > 0:
                          ball.duplicates_red[id] = list(duplicates)
                          redExistCount += 1
                     set1 = set(ball.after)
-                    set2 = set(BallDataList[num].after)
+                    set2 = set(UpList[num].after)
                     duplicates = set1.intersection(set2)
                     if len(duplicates) > 0:
                          ball.duplicates_blue[id] = list(duplicates)
@@ -169,11 +167,11 @@ def Analyse():
    
 
 
-def Recommend():
+def Recommend(BallDataList):
      redFilterNumber = []
      blueFilterNumber = []
      filterCountTT = filterCount = 3
-     recommendCount = 3
+     recommendCount = 100
 
      for ball in BallDataList:    
           if filterCount == 0:
@@ -194,7 +192,7 @@ def Recommend():
      recommend_red = []
      recommend_blue = []
      current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-     with open(f'./OutPut/DaLeTou_Recommend.txt', "a",encoding="utf-8") as file:
+     with open(f'./OutPut/DaLeTou_Recommend_V2.txt', "a",encoding="utf-8") as file:
            
        print(f'recommend:{current_time_str}')    
        file.write(f'recommend:{current_time_str}\n')
@@ -206,12 +204,16 @@ def Recommend():
                t = int(time.time() * 10000000)
                random.seed(t)
                num = random.randint(1, 35)
-               if num not in recommend_red: #and num in redTopKeys:
-                    if len(redFilterNumber)+len(recommend_red) <  len(redTopKeys):
-                         if num not in redFilterNumber:
-                              recommend_red.append(num)
-                    else:
-                         recommend_red.append(num)
+               if num not in recommend_red:
+                    if num in redTopKeys:
+                         recommend_red.append(num)         
+                    else:           
+                         if num in redFilterNumber:
+                              boolNum = random.randint(1,2)
+                              if boolNum == 2:
+                                  recommend_red.append(num)    
+                         else:
+                              recommend_red.append(num)   
                if(len(recommend_red) == 5):
                     break
 
@@ -250,6 +252,7 @@ if __name__ == "__main__":
     nearNum = 5
     redTopKeys = []
     blueTopKeys = []
+    BallDataList = []
 
     start = datetime.strptime(startDate,'%Y-%m-%d').date()
     child_frame = browser.find_element(by.By.XPATH,'//*[@id="iFrame1"]')
@@ -260,12 +263,12 @@ if __name__ == "__main__":
           sleep(1)
 
           html =etree.HTML(browser.page_source)
-          tt = ParseSource(html)
+          tt = ParseSource(html,BallDataList)
           if tt <= start:
                break
           nextBtn = browser.find_element(by.By.XPATH,'/html/body/div/div/div[3]/ul/li[13]')
           nextBtn.click()
 
     #PrintResult()
-    Analyse()
-    Recommend()
+    Analyse(BallDataList)
+    Recommend(BallDataList)
