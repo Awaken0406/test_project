@@ -41,13 +41,13 @@ def ParseSource(html):
               ball.red.append(int(text[i]))
          ball.blue = int(text[8])
          BallDataMap[ball.ID] = ball
-         BallDataList.append(ball)
+         BallDataList.append(ball)#默认升序
 
 
 def Analyse():
      global RedTotalTimes
      global BlueTotalTimes
-     for i in range(len(BallDataList)):
+     for i in range(len(BallDataList)):#默认升序
           ball = BallDataList[i]
           id = 0
           ball.duplicates_red = {}
@@ -84,7 +84,7 @@ def Analyse():
           for k,numList in data.duplicates_blue.items():
                blueTimes[k]+=1
 
-          #print(f'ID:{data.ID},date:{data.date},red:{data.red},blue:[{data.blue}]')
+          print(f'ID:{data.ID},date:{data.date},red:{data.red},blue:[{data.blue}]')
           #print('red',data.duplicates_red)
           print('blue',data.duplicates_blue)
      
@@ -122,7 +122,7 @@ def Recommend():
      redFilterNumber = []
      blueFilterNumber = []
      filterCountTT = filterCount = 3
-     recommendCount = 3
+     recommendCount = 100
 
      for ball in reversed(BallDataList):    
           if filterCount == 0:
@@ -143,7 +143,7 @@ def Recommend():
      recommend_red = []
      recommend_blue = []
      current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-     with open(f'./OutPut/DoubleBall_Recommend.txt', "a",encoding="utf-8") as file:
+     with open(f'./OutPut/DoubleBall_Recommend_V2.txt', "a",encoding="utf-8") as file:
            
        print(f'recommend:{current_time_str}')    
        file.write(f'recommend:{current_time_str}\n')
@@ -155,12 +155,17 @@ def Recommend():
                t = int(time.time() * 10000000)
                random.seed(t)
                num = random.randint(1, 33)
-               if num not in recommend_red and num in redTopKeys:
-                    if len(redFilterNumber)+len(recommend_red) <  len(redTopKeys):
-                         if num not in redFilterNumber:
-                              recommend_red.append(num)
-                    else:
-                         recommend_red.append(num)
+               if num not in recommend_red:
+                    if num in redTopKeys:
+                         recommend_red.append(num)         
+                    else:           
+                         if num in redFilterNumber:
+                              boolNum = random.randint(1,2)
+                              if boolNum == 2:
+                                  recommend_red.append(num)    
+                         else:
+                              recommend_red.append(num)   
+                         
                if(len(recommend_red) == 6):
                     break
 
@@ -267,3 +272,6 @@ if __name__ == "__main__":
     #PrintResult()
     Analyse()
     Recommend()
+    for i in range(3):
+         index = random.randint(2, 101)
+         print("index",index)
