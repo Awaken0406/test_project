@@ -57,11 +57,11 @@ def Print_DaLeTou(AllDataList):
 if __name__ == "__main__":
     
 
-    with open('./OutPut/DoubleBall_Recommend.txt', 'r') as file:
+    with open('./OutPut/DoubleBall_Recommend_V2.txt', 'r') as file:
         content = file.readlines()
 
-    find_front = [4, 14, 16, 21, 25]
-    find_back = [3, 8]
+    find_front = [1,8,9,23,24,30]
+    find_back = [8]
 
     class DataList:
         front = []
