@@ -1,32 +1,11 @@
 
 # 定义蓝色字体 ANSI 转义码
+from collections import defaultdict
+
+
 blue_color = "\033[34m"
 # 恢复默认颜色 ANSI 转义码
 reset_color = "\033[0m"
-
-
-
-def Print_Double(AllDataList):
-    one=two=three=four=five=six=0
-    for data in AllDataList:
-        if data.front_hit_count == 6 and data.back_hit_count == 1:
-            one += 1
-        elif data.front_hit_count == 6 and data.back_hit_count == 0:
-            two += 1
-        elif data.front_hit_count == 5 and data.back_hit_count == 1:
-            three += 1
-        elif (data.front_hit_count == 5 and data.back_hit_count == 0) or (data.front_hit_count == 4 and data.back_hit_count == 1):
-             four += 1
-        elif (data.front_hit_count == 4 and data.back_hit_count == 0) or (data.front_hit_count == 3 and data.back_hit_count == 1):
-             five += 1
-        elif (data.front_hit_count == 2 or data.front_hit_count == 1 or data.front_hit_count == 0) and data.back_hit_count == 1:
-             six += 1
-
-    money = one*6000000 + two*100000 + three*3000 + four*200 + five*10 + six*5   
-    print(f'Total:{len(AllDataList)}')
-    print(f'{blue_color}One:{one},Two:{two},Three:{three},Four:{four},Five:{five},Six:{six}{reset_color}')
-    print(f'{blue_color}money:{money}{reset_color}')
-
 def Print_DaLeTou(AllDataList):
     one=two=three=four=five=six=seven=eight=nine = 0
     for data in AllDataList:
@@ -50,29 +29,58 @@ def Print_DaLeTou(AllDataList):
              nine += 1
 
     money = one*10000000 + two*100000 + three*10000 + four*3000 + five*300 + six*200 + seven*100 + eight*15 + nine*5
-    print(f'Total:{len(AllDataList)}')
+    #print(f'Total:{len(AllDataList)}')
     print(f'{blue_color}One:{one},Two:{two},Three:{three},Four:{four},Five:{five},Six:{six},Seven:{seven},Eight:{eight},Nine:{nine}{reset_color}')
     print(f'{blue_color}money:{money}{reset_color}')
 
-if __name__ == "__main__":
-    
 
-    with open('./OutPut/DoubleBall_Recommend_V2.txt', 'r') as file:
+def Print_Double(AllDataList):
+    one=two=three=four=five=six=0
+    for data in AllDataList:
+        if data.front_hit_count == 6 and data.back_hit_count == 1:
+            one += 1
+        elif data.front_hit_count == 6 and data.back_hit_count == 0:
+            two += 1
+        elif data.front_hit_count == 5 and data.back_hit_count == 1:
+            three += 1
+        elif (data.front_hit_count == 5 and data.back_hit_count == 0) or (data.front_hit_count == 4 and data.back_hit_count == 1):
+             four += 1
+        elif (data.front_hit_count == 4 and data.back_hit_count == 0) or (data.front_hit_count == 3 and data.back_hit_count == 1):
+             five += 1
+        elif (data.front_hit_count == 2 or data.front_hit_count == 1 or data.front_hit_count == 0) and data.back_hit_count == 1:
+             six += 1
+    
+    one1=two1=three1=four1=five1=six1=0
+    for data in AllDataList:
+        if data.front_hit_count == 6 and data.single_back_hit_count == 1:
+            one1 += 1
+        elif data.front_hit_count == 6 and data.single_back_hit_count == 0:
+            two1 += 1
+        elif data.front_hit_count == 5 and data.single_back_hit_count == 1:
+            three1 += 1
+        elif (data.front_hit_count == 5 and data.single_back_hit_count == 0) or (data.front_hit_count == 4 and data.single_back_hit_count == 1):
+             four1 += 1
+        elif (data.front_hit_count == 4 and data.single_back_hit_count == 0) or (data.front_hit_count == 3 and data.single_back_hit_count == 1):
+             five1 += 1
+        elif (data.front_hit_count == 2 or data.front_hit_count == 1 or data.front_hit_count == 0) and data.single_back_hit_count == 1:
+             six1 += 1
+    #print('DOUBLE:')
+    money = one*6000000 + two*100000 + three*3000 + four*200 + five*10 + six*5   
+    print(f'{blue_color}One:{one},Two:{two},Three:{three},Four:{four},Five:{five},Six:{six}{reset_color}')
+    print(f'{blue_color}money:{money}{reset_color}')
+'''
+    print('SINGLE:')
+    money1 = one1*6000000 + two1*100000 + three1*3000 + four1*200 + five1*10 + six1*5   
+    print(f'{blue_color}One:{one1},Two:{two1},Three:{three1},Four:{four1},Five:{five1},Six:{six1}{reset_color}')
+    print(f'{blue_color}money:{money1}{reset_color}')
+'''
+
+
+def LoadFile(fileName,AllDataList,find_front,find_back):
+    g_Count = defaultdict(int)
+    with open(fileName, 'r') as file:
         content = file.readlines()
 
-    find_front = [1,8,9,23,24,30]
-    find_back = [8]
-
-    class DataList:
-        front = []
-        back = []
-        front_hit_count = 0
-        back_hit_count = 0
-        frontStr=''
-        backStr=''
-        allHit = False
-
-    AllDataList = []
     for line in content:
         if 'recommend' in line or line == '\n':
             continue
@@ -80,7 +88,6 @@ if __name__ == "__main__":
         front_str, back_str = parts
         front_array = list(map(int, front_str.strip('[]').split(', ')))
         back_array = list(map(int, back_str.strip('[]').split(', ')))
-
 
         data = DataList()
         data.front = front_array
@@ -90,39 +97,83 @@ if __name__ == "__main__":
     for data in AllDataList:
         front_hit_count = 0
         back_hit_count = 0
+        single_back_hit_count = 0
         frontStr = ''
         backStr = ''
-        allHit = True
+        single_backStr = ''
+        
+        
 
         for num in  data.front:
             if num in find_front:
                 front_hit_count += 1
                 frontStr += blue_color + str(num) + reset_color
             else:  
-                allHit = False
                 frontStr += str(num)
             frontStr +=  ' '
-
+        
         for num in  data.back:
             if num in find_back:
                 back_hit_count += 1
                 backStr += blue_color + str(num) + reset_color 
             else:            
-                allHit = False
                 backStr += str(num)
             backStr += ' '
+
+        if data.back[0] == find_back[0]:
+                single_back_hit_count += 1
+                single_backStr += blue_color + str(num) + reset_color 
+        else:            
+                single_backStr += str(num)
+        allHit = True
+        for num in find_front:
+            if num  not in data.front:
+                allHit = False
+        for num in find_back:
+            if num not in data.back:
+                allHit = False
+
         
         data.front_hit_count = front_hit_count
         data.back_hit_count = back_hit_count
+        data.single_back_hit_count = single_back_hit_count
         data.frontStr = frontStr
         data.backStr = backStr
+        data.single_backStr = single_backStr
         data.allHit = allHit
 
-    for data in AllDataList:
+    #print(f'Total:{len(AllDataList)}')
+''' for data in AllDataList:
+        g_Count[data.front_hit_count + data.back_hit_count] += 1
         print(f'[{data.frontStr}]--[{data.backStr}], hitCount : {blue_color}{data.front_hit_count + data.back_hit_count}{reset_color}')
 
     for data in AllDataList:
         if data.allHit == True:
             print(f'All Hit :[{data.frontStr}]--[{data.backStr}]')
+
+    g_Count = dict(sorted(g_Count.items(), key=lambda x: x[0]))    
+    for k,v in g_Count.items():
+        print(f'{blue_color}hit {k} ball has {v}{reset_color}')
+''' 
+
+class DataList:
+        front = []
+        back = []
+        front_hit_count = 0
+        back_hit_count = 0
+        single_back_hit_count = 0
+        frontStr=''
+        backStr=''
+        single_backStr = ''
+        allHit = False
+
+
+def Doit(fileName,find_front,find_back):
+    print('FileName:',fileName)
+    AllDataList = []   
+    LoadFile(fileName,AllDataList,find_front,find_back)
     Print_Double(AllDataList)
     #Print_DaLeTou(AllDataList)
+
+if __name__ == "__main__":
+    Doit('./OutPut/DoubleBall_Recommend_V2.txt',[1,8,9,23,24,30],[8])
