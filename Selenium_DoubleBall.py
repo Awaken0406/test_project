@@ -9,19 +9,11 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 import random
 import time
+import Selenium_Result_Analyse
 
-class BallData:
-     ID = ''
-     date = ''
-     red = []
-     blue = 0
-     duplicates_red = {}
-     duplicates_blue = {}
 
-BallDataMap = {}
-BallDataList = []
-RedTotalTimes = defaultdict(int)
-BlueTotalTimes = defaultdict(int)
+
+
 
 '''
 在 Python 中，类的数据成员（类属性）在类定义中被初始化为可变对象（如列表）时，
@@ -29,69 +21,70 @@ BlueTotalTimes = defaultdict(int)
 而是保留了上一个实例的值。
 '''
 
-def ParseSource(html):   
+def ParseSource(html,BallDataList):   
     dataList = html.xpath('/html/body/div[2]/div[3]/div[3]/div/table/tbody/tr')
     for data in reversed(dataList):
          text = data.xpath('.//text()')
          ball = BallData()
          ball.red = []
-         ball.ID = text[0]
+         ball.ID = int(text[0])
          ball.date = text[1]
          for i in range(2,8):
               ball.red.append(int(text[i]))
          ball.blue = int(text[8])
-         BallDataMap[ball.ID] = ball
          BallDataList.append(ball)#默认升序
 
 
-def Analyse():
-     global RedTotalTimes
-     global BlueTotalTimes
-     for i in range(len(BallDataList)):#默认升序
-          ball = BallDataList[i]
+def Analyse(sliced_list):
+     RedTotalTimes = defaultdict(int)
+     BlueTotalTimes = defaultdict(int)
+  
+   
+     for i in range(len(sliced_list)):#默认升序
+          ball = sliced_list[i]
           id = 0
           ball.duplicates_red = {}
           for num in range(i+1,i+1+nearNum):
-                    if(num >= len(BallDataList)):
+                    if(num >= len(sliced_list)):
                          break
                     id += 1
                     set1 = set(ball.red)
-                    set2 = set(BallDataList[num].red)
+                    set2 = set(sliced_list[num].red)
                     duplicates = set1.intersection(set2)
                     if len(duplicates) > 0:
                          ball.duplicates_red[id] = list(duplicates)
 
      blueExistCount = 0
-     for i in range(len(BallDataList)):
-          ball = BallDataList[i]
+     for i in range(len(sliced_list)):
+          ball = sliced_list[i]
           id = 0
           ball.duplicates_blue = {}
           for num in range(i+1,i+1+nearNum):
-                    if(num >= len(BallDataList)):
+                    if(num >= len(sliced_list)):
                          break
                     id += 1
-                    if ball.blue == BallDataList[num].blue:
+                    if ball.blue == sliced_list[num].blue:
                          ball.duplicates_blue[id] = ball.blue
                          blueExistCount += 1
      
      redNum = defaultdict(int)
      redTimes = defaultdict(int)
      blueTimes = defaultdict(int)
-     for data in BallDataList:    
+     for data in sliced_list:    
           for k,numList in data.duplicates_red.items():
                redNum[len(numList)]+=1
                redTimes[k]+=1
           for k,numList in data.duplicates_blue.items():
                blueTimes[k]+=1
 
-          print(f'ID:{data.ID},date:{data.date},red:{data.red},blue:[{data.blue}]')
+          #print(f'ID:{data.ID},date:{data.date},red:{data.red},blue:[{data.blue}]')
           #print('red',data.duplicates_red)
-          print('blue',data.duplicates_blue)
+          #print('blue',data.duplicates_blue)
      
           for num in data.red:
                RedTotalTimes[num] += 1
           BlueTotalTimes[data.blue] += 1
-     print(f'Total:{len(BallDataList)},blueExistCount:{blueExistCount}')
+     #print(f'Total:{len(sliced_list)},blueExistCount:{blueExistCount}')
      RedTotalTimes = sorted(RedTotalTimes.items(), key=lambda x: x[1], reverse=True)
      BlueTotalTimes = sorted(BlueTotalTimes.items(), key=lambda x: x[1], reverse=True)
 
@@ -99,6 +92,9 @@ def Analyse():
      len2 = int(len(BlueTotalTimes)/2)
      index1 = 0
      index2 = 0
+
+     redTopKeys = []
+     blueTopKeys = []
      for num, count in RedTotalTimes: 
           index1+=1
           if index1 > len1:
@@ -110,50 +106,51 @@ def Analyse():
                break
           blueTopKeys.append(num)
 
-     print(f'total:{len(BallDataList)},nearNum:{nearNum},redNum:{redNum},redTimes:{redTimes},blueTimes:{blueTimes}')
-     print("RedTotalTimes:",RedTotalTimes)
-     print("BlueTotalTimes:",BlueTotalTimes)
-     print("redTopKeys:",redTopKeys)     
-     print("blueTopKeys:",blueTopKeys)   
+     #print(f'total:{len(sliced_list)},nearNum:{nearNum},redNum:{redNum},redTimes:{redTimes},blueTimes:{blueTimes}')
+     #print("RedTotalTimes:",RedTotalTimes)
+     #print("BlueTotalTimes:",BlueTotalTimes)
+     #print("redTopKeys:",redTopKeys)     
+     #print("blueTopKeys:",blueTopKeys)
+     return redTopKeys 
    
 
 
-def Recommend():
+def DoRecommend(fileName,sliced_list,redTopKeys):
      redFilterNumber = []
      blueFilterNumber = []
      filterCountTT = filterCount = 3
      recommendCount = 100
 
-     for ball in reversed(BallDataList):    
+     for ball in reversed(sliced_list):    
           if filterCount == 0:
                break
           filterCount -= 1
           redFilterNumber += ball.red
 
      bluefilterCountTT = bluefilterCount = 5
-     for ball in reversed(BallDataList):    
+     for ball in reversed(sliced_list):    
           if bluefilterCount == 0:
                break
           bluefilterCount -= 1
           blueFilterNumber.append(ball.blue)
      redFilterNumber = list(set(redFilterNumber))
      blueFilterNumber = list(set(blueFilterNumber))
-     print(f'RedfilterCount:{filterCountTT},BluefilterCount:{bluefilterCountTT},filter_red:{redFilterNumber},filter_blue:{blueFilterNumber}')
+     #print(f'RedfilterCount:{filterCountTT},BluefilterCount:{bluefilterCountTT},filter_red:{redFilterNumber},filter_blue:{blueFilterNumber}')
 
      recommend_red = []
      recommend_blue = []
      current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-     with open(f'./OutPut/DoubleBall_Recommend_V2.txt', "a",encoding="utf-8") as file:
+     with open(fileName, "a",encoding="utf-8") as file:
            
-       print(f'recommend:{current_time_str}')    
+       #print(f'recommend:{current_time_str}')    
        file.write(f'recommend:{current_time_str}\n')
        for i in range(recommendCount):
           recommend_red = []
           recommend_blue = []
           while True:
-               sleep(0.2)
-               t = int(time.time() * 10000000)
-               random.seed(t)
+               #sleep(0.1)
+               #t = int(time.time() * 10000000)
+               #random.seed(t)
                num = random.randint(1, 33)
                if num not in recommend_red:
                     if num in redTopKeys:
@@ -170,9 +167,9 @@ def Recommend():
                     break
 
           while True:
-               sleep(0.2)
-               t = int(time.time() * 10000000)
-               random.seed(t)
+               #sleep(0.1)
+               #t = int(time.time() * 10000000)
+               #random.seed(t)
                num = random.randint(1, 16)
                if num not in recommend_blue:
                     if num not in blueFilterNumber:
@@ -180,37 +177,17 @@ def Recommend():
                     if(len(recommend_blue) == 2):
                          break
           recommend_red.sort()
-          recommend_blue.sort()
-          print(f"{recommend_red}--{recommend_blue}")
+          #recommend_blue.sort()
+          #print(f"{recommend_red}--{recommend_blue}")
           file.write(f"{recommend_red}--{recommend_blue}\n")
        file.write("\n")
      file.close()
 
-def PrintResult():
-     global RedTotalTimes
-     global BlueTotalTimes
-     with open(f'./OutPut/DoubleBall_{startDate}_{endDate}.txt', "w",encoding="utf-8") as file:
-          for data in BallDataMap.values():
-               info = f'ID:{data.ID},date:{data.date},red:{data.red},blue:[{data.blue}]'
-               print(info)
-               file.write(info+'\n')
-
-          for num, count in RedTotalTimes:
-               info = f"rd:{num} times:{count}"
-               file.write(info+'\n')
-          print("***********************************")
-          file.write("***********************************"+'\n')
-          for num, count in BlueTotalTimes:        
-               info = f"blue:{num} times:{count}"
-               file.write(info+'\n')
-     file.close()
-      
 
 
 
 
-
-def SearchDate(start,end):
+def SearchDate(start,end,BallDataList):
     custom = browser.find_element(by.By.XPATH,'/html/body/div[2]/div[3]/div[2]/div[1]/div/div[1]/strong')
     custom.click()
     sleep(1)
@@ -228,11 +205,19 @@ def SearchDate(start,end):
     search.click()
     sleep(2) 
     html =etree.HTML(browser.page_source)
-    ParseSource(html)
+    ParseSource(html,BallDataList)
    
 
 
 if __name__ == "__main__":
+    
+    class BallData:
+     ID = 0
+     date = ''
+     red = []
+     blue = 0
+     duplicates_red = {}
+     duplicates_blue = {}
       
     option = ChromeOptions() 
     option.add_argument('--headless')
@@ -245,14 +230,12 @@ if __name__ == "__main__":
     browser.maximize_window()
     browser.get('https://www.zhcw.com/kjxx/ssq/')
     sleep(2)
-    t = int(time.time() * 10000000)
-    random.seed(t)
 
-    redTopKeys = []
-    blueTopKeys = []
+
+
 
     nearNum = 5
-    startDate = '2024-01-01'
+    startDate = '2023-01-01'
     endDate = datetime.now().date().strftime('%Y-%m-%d')
 
     start = datetime.strptime(startDate,'%Y-%m-%d')
@@ -260,18 +243,25 @@ if __name__ == "__main__":
     delta = end - start
     diff = delta.days
 
-
+    BallDataList = []
     while diff > 90:
             newDate = start + timedelta(days=90)
-            SearchDate(start,newDate)
+            SearchDate(start,newDate,BallDataList)
             start = newDate + timedelta(days=1)
             delta = end - start
             diff =  delta.days 
 
-    SearchDate(start,end)
-    #PrintResult()
-    Analyse()
-    Recommend()
-    for i in range(3):
-         index = random.randint(2, 101)
-         print("index",index)
+    SearchDate(start,end,BallDataList)
+    startID = BallDataList[0].ID
+    endID = BallDataList[len(BallDataList)-1].ID
+    legth = len(BallDataList)
+    for i in range(legth-(legth-50), legth):
+          sleep(0.1)
+          random.seed(int(time.time() * 1000000))
+          sliced_list = BallDataList[:i]
+          redTopKeys = Analyse(sliced_list)
+          fileName = f'./OutPut/DoubleBall_{i}.txt'
+          DoRecommend(fileName,sliced_list,redTopKeys)
+          nextData = BallDataList[i]
+          #print('nextID',nextData.ID)
+          Selenium_Result_Analyse.Doit(fileName,nextData.red,[nextData.blue])
