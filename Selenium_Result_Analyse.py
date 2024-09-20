@@ -1,179 +1,87 @@
+from collections import OrderedDict, defaultdict
+import Selenium_Result_Update
+from Selenium_Result_Update import BallDataEx
+from datetime import datetime, timedelta
 
-# 定义蓝色字体 ANSI 转义码
-from collections import defaultdict
+class AnalyseData:
+        ID = 0
+        red = []
+        blue = 0
 
-
-blue_color = "\033[34m"
-# 恢复默认颜色 ANSI 转义码
-reset_color = "\033[0m"
-def Print_DaLeTou(AllDataList):
-    one=two=three=four=five=six=seven=eight=nine = 0
-    for data in AllDataList:
-        if data.front_hit_count == 5 and data.back_hit_count == 2:
-            one += 1
-        elif data.front_hit_count == 5 and data.back_hit_count == 1:
-            two += 1
-        elif data.front_hit_count == 5 and data.back_hit_count == 0:
-            three += 1
-        elif (data.front_hit_count == 4 and data.back_hit_count == 2):
-             four += 1
-        elif (data.front_hit_count == 4 and data.back_hit_count == 1):
-             five += 1
-        elif data.front_hit_count == 3  and data.back_hit_count == 2:
-             six += 1
-        elif (data.front_hit_count == 4 and data.back_hit_count == 0):
-             seven += 1
-        elif (data.front_hit_count == 3 and data.back_hit_count == 1) or (data.front_hit_count == 2 and data.back_hit_count == 2):
-             eight += 1
-        elif (data.front_hit_count == 3 and data.back_hit_count == 0) or (data.front_hit_count == 1 and data.back_hit_count == 2) or (data.front_hit_count == 2 and data.back_hit_count == 1) or (data.front_hit_count == 0 and data.back_hit_count == 2):
-             nine += 1
-
-    money = one*10000000 + two*100000 + three*10000 + four*3000 + five*300 + six*200 + seven*100 + eight*15 + nine*5
-    #print(f'Total:{len(AllDataList)}')
-    print(f'{blue_color}One:{one},Two:{two},Three:{three},Four:{four},Five:{five},Six:{six},Seven:{seven},Eight:{eight},Nine:{nine}{reset_color}')
-    print(f'{blue_color}money:{money}{reset_color}')
-
-
-def Print_Double(AllDataList):
-    one=two=three=four=five=six=0
-    for data in AllDataList:
-        if data.front_hit_count == 6 and data.back_hit_count == 1:
-            one += 1
-        elif data.front_hit_count == 6 and data.back_hit_count == 0:
-            two += 1
-        elif data.front_hit_count == 5 and data.back_hit_count == 1:
-            three += 1
-        elif (data.front_hit_count == 5 and data.back_hit_count == 0) or (data.front_hit_count == 4 and data.back_hit_count == 1):
-             four += 1
-        elif (data.front_hit_count == 4 and data.back_hit_count == 0) or (data.front_hit_count == 3 and data.back_hit_count == 1):
-             five += 1
-        elif (data.front_hit_count == 2 or data.front_hit_count == 1 or data.front_hit_count == 0) and data.back_hit_count == 1:
-             six += 1
-    
-    one1=two1=three1=four1=five1=six1=0
-    for data in AllDataList:
-        if data.front_hit_count == 6 and data.single_back_hit_count == 1:
-            one1 += 1
-        elif data.front_hit_count == 6 and data.single_back_hit_count == 0:
-            two1 += 1
-        elif data.front_hit_count == 5 and data.single_back_hit_count == 1:
-            three1 += 1
-        elif (data.front_hit_count == 5 and data.single_back_hit_count == 0) or (data.front_hit_count == 4 and data.single_back_hit_count == 1):
-             four1 += 1
-        elif (data.front_hit_count == 4 and data.single_back_hit_count == 0) or (data.front_hit_count == 3 and data.single_back_hit_count == 1):
-             five1 += 1
-        elif (data.front_hit_count == 2 or data.front_hit_count == 1 or data.front_hit_count == 0) and data.single_back_hit_count == 1:
-             six1 += 1
-    #print('DOUBLE:')
-    money = one*6000000 + two*100000 + three*3000 + four*200 + five*10 + six*5   
-    print(f'{blue_color}One:{one},Two:{two},Three:{three},Four:{four},Five:{five},Six:{six}{reset_color}')
-    print(f'{blue_color}money:{money}{reset_color}')
-'''
-    print('SINGLE:')
-    money1 = one1*6000000 + two1*100000 + three1*3000 + four1*200 + five1*10 + six1*5   
-    print(f'{blue_color}One:{one1},Two:{two1},Three:{three1},Four:{four1},Five:{five1},Six:{six1}{reset_color}')
-    print(f'{blue_color}money:{money1}{reset_color}')
-'''
-
-
-def LoadFile(fileName,AllDataList,find_front,find_back):
-    g_Count = defaultdict(int)
-    with open(fileName, 'r') as file:
-        content = file.readlines()
-
-    for line in content:
-        if 'recommend' in line or line == '\n':
-            continue
-        parts = line.strip().split('--')       
-        front_str, back_str = parts
-        front_array = list(map(int, front_str.strip('[]').split(', ')))
-        back_array = list(map(int, back_str.strip('[]').split(', ')))
-
-        data = DataList()
-        data.front = front_array
-        data.back = back_array
-        AllDataList.append(data)
-    
-    for data in AllDataList:
-        front_hit_count = 0
-        back_hit_count = 0
-        single_back_hit_count = 0
-        frontStr = ''
-        backStr = ''
-        single_backStr = ''
-        
-        
-
-        for num in  data.front:
-            if num in find_front:
-                front_hit_count += 1
-                frontStr += blue_color + str(num) + reset_color
-            else:  
-                frontStr += str(num)
-            frontStr +=  ' '
-        
-        for num in  data.back:
-            if num in find_back:
-                back_hit_count += 1
-                backStr += blue_color + str(num) + reset_color 
-            else:            
-                backStr += str(num)
-            backStr += ' '
-
-        if data.back[0] == find_back[0]:
-                single_back_hit_count += 1
-                single_backStr += blue_color + str(num) + reset_color 
-        else:            
-                single_backStr += str(num)
-        allHit = True
-        for num in find_front:
-            if num  not in data.front:
-                allHit = False
-        for num in find_back:
-            if num not in data.back:
-                allHit = False
-
-        
-        data.front_hit_count = front_hit_count
-        data.back_hit_count = back_hit_count
-        data.single_back_hit_count = single_back_hit_count
-        data.frontStr = frontStr
-        data.backStr = backStr
-        data.single_backStr = single_backStr
-        data.allHit = allHit
-
-    #print(f'Total:{len(AllDataList)}')
-''' for data in AllDataList:
-        g_Count[data.front_hit_count + data.back_hit_count] += 1
-        print(f'[{data.frontStr}]--[{data.backStr}], hitCount : {blue_color}{data.front_hit_count + data.back_hit_count}{reset_color}')
-
-    for data in AllDataList:
-        if data.allHit == True:
-            print(f'All Hit :[{data.frontStr}]--[{data.backStr}]')
-
-    g_Count = dict(sorted(g_Count.items(), key=lambda x: x[0]))    
-    for k,v in g_Count.items():
-        print(f'{blue_color}hit {k} ball has {v}{reset_color}')
-''' 
-
-class DataList:
-        front = []
-        back = []
-        front_hit_count = 0
-        back_hit_count = 0
-        single_back_hit_count = 0
-        frontStr=''
-        backStr=''
-        single_backStr = ''
-        allHit = False
-
-
-def Doit(fileName,find_front,find_back):
-    print('FileName:',fileName)
-    AllDataList = []   
-    LoadFile(fileName,AllDataList,find_front,find_back)
-    Print_Double(AllDataList)
-    #Print_DaLeTou(AllDataList)
 
 if __name__ == "__main__":
-    Doit('./OutPut/DoubleBall_Recommend_V2.txt',[1,8,9,23,24,30],[8])
+    AllDataMap = Selenium_Result_Update.LoadFile('./OutPut/DoubleBallData.txt')
+
+    keys_to_delete = []
+    startDate = datetime.strptime('2024-01-01','%Y-%m-%d')
+    for key, value in AllDataMap.items():
+        date = datetime.strptime(value.date,'%Y-%m-%d')
+        if date < startDate:
+            keys_to_delete.append(key)
+
+    for key in keys_to_delete:
+        del AllDataMap[key]
+
+    print('startDate',startDate.date()) 
+    AnalyseMap =defaultdict(int)
+    TotalCountMap =defaultdict(int)
+    BlueCountMap = defaultdict(int)
+    for key, value in AllDataMap.items():
+        numList = [0,0,0,0]
+
+        data = AnalyseData()
+        data.ID = key
+        data.red = []
+    
+        for num in value.red:
+            if(num < 10):
+                data.red.append(0)
+                numList[0] += 1
+            elif(num < 20):
+                data.red.append(1)
+                numList[1] += 1
+            elif(num < 30):
+                data.red.append(2)
+                numList[2] += 1
+            else:
+                data.red.append(3)
+                numList[3] += 1
+
+        num = value.blue              
+        if(num < 10):
+            data.blue = 0
+            BlueCountMap[0] += 1
+            #numList[4] += 1
+        elif(num < 20):
+           data.blue = 1
+           BlueCountMap[1] += 1
+           #numList[5] += 1
+
+
+        AnalyseMap[data.ID] = data
+        TotalCountMap[tuple(numList)] += 1
+
+    tupleCount =defaultdict(int)
+    for key, value in AnalyseMap.items():
+        newKey = tuple(value.red) 
+        tupleCount[newKey] += 1
+
+    #x[0]表示按key排序,x[1]表示按value排序
+    sorted_items = sorted(tupleCount.items(), key=lambda x: x[1], reverse=True)
+    tupleCount = OrderedDict(sorted_items)
+
+    #组合
+    #print('Red')
+    #for k,count in tupleCount.items():
+    #    print(k,count)
+
+    #print('Blue')
+    BlueCountMap = dict(sorted(BlueCountMap.items(), key=lambda x: x[1], reverse=True))
+    #for k,count in BlueCountMap.items():
+    #    print(k,count)  
+
+    #组合的统计
+    sorted_items = sorted(TotalCountMap.items(), key=lambda x: x[1], reverse=True)
+    TotalCountMap = OrderedDict(sorted_items)  
+    for k,count in TotalCountMap.items():
+        print(k,count)
