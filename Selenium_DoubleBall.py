@@ -9,9 +9,18 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 import random
 import time
-import Selenium_Result_Analyse
+import Selenium_Recommend_Analyse
 
+class BallData:
+     ID = 0
+     date = ''
+     red = []
+     blue = 0
+     duplicates_red = {}
+     duplicates_blue = {}
 
+     def __lt__(self, other):
+          return (self.ID) < (other.ID)
 
 
 
@@ -38,7 +47,7 @@ def ParseSource(html,BallDataList):
 def Analyse(sliced_list):
      RedTotalTimes = defaultdict(int)
      BlueTotalTimes = defaultdict(int)
-  
+     nearNum = 5
    
      for i in range(len(sliced_list)):#默认升序
           ball = sliced_list[i]
@@ -187,7 +196,7 @@ def DoRecommend(fileName,sliced_list,redTopKeys):
 
 
 
-def SearchDate(start,end,BallDataList):
+def SearchDate(browser,start,end,BallDataList):
     custom = browser.find_element(by.By.XPATH,'/html/body/div[2]/div[3]/div[2]/div[1]/div/div[1]/strong')
     custom.click()
     sleep(1)
@@ -207,18 +216,7 @@ def SearchDate(start,end,BallDataList):
     html =etree.HTML(browser.page_source)
     ParseSource(html,BallDataList)
    
-
-
-if __name__ == "__main__":
-    
-    class BallData:
-     ID = 0
-     date = ''
-     red = []
-     blue = 0
-     duplicates_red = {}
-     duplicates_blue = {}
-      
+def GetHtml(startDate):
     option = ChromeOptions() 
     option.add_argument('--headless')
     option.add_experimental_option('excludeSwitches',['enable-automation'])
@@ -231,11 +229,7 @@ if __name__ == "__main__":
     browser.get('https://www.zhcw.com/kjxx/ssq/')
     sleep(2)
 
-
-
-
-    nearNum = 5
-    startDate = '2023-01-01'
+    
     endDate = datetime.now().date().strftime('%Y-%m-%d')
 
     start = datetime.strptime(startDate,'%Y-%m-%d')
@@ -246,12 +240,22 @@ if __name__ == "__main__":
     BallDataList = []
     while diff > 90:
             newDate = start + timedelta(days=90)
-            SearchDate(start,newDate,BallDataList)
+            SearchDate(browser,start,newDate,BallDataList)
             start = newDate + timedelta(days=1)
             delta = end - start
             diff =  delta.days 
 
-    SearchDate(start,end,BallDataList)
+    SearchDate(browser,start,end,BallDataList)
+    return BallDataList
+
+if __name__ == "__main__":
+    
+      
+    BallDataList = GetHtml('2024-01-01')
+    redTopKeys = Analyse(BallDataList)
+    fileName = f'./OutPut/DoubleBall_senge.txt'
+    DoRecommend(fileName,BallDataList,redTopKeys)
+'''
     startID = BallDataList[0].ID
     endID = BallDataList[len(BallDataList)-1].ID
     legth = len(BallDataList)
@@ -264,4 +268,6 @@ if __name__ == "__main__":
           DoRecommend(fileName,sliced_list,redTopKeys)
           nextData = BallDataList[i]
           #print('nextID',nextData.ID)
-          Selenium_Result_Analyse.Doit(fileName,nextData.red,[nextData.blue])
+          Selenium_Recommend_Analyse.Doit(fileName,nextData.red,[nextData.blue])
+
+'''
