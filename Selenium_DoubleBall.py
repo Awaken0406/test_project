@@ -1,3 +1,4 @@
+import math
 from selenium import webdriver
 from time import sleep
 from selenium.webdriver import ChromeOptions
@@ -9,18 +10,9 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 import random
 import time
+import Selenium_Result_Update
 import Selenium_Recommend_Analyse
 
-class BallData:
-     ID = 0
-     date = ''
-     red = []
-     blue = 0
-     duplicates_red = {}
-     duplicates_blue = {}
-
-     def __lt__(self, other):
-          return (self.ID) < (other.ID)
 
 
 
@@ -29,19 +21,6 @@ class BallData:
 这些对象会被所有该类的实例共享。这可能导致在实例化新对象时，类属性的可变对象并不会被重置为空，
 而是保留了上一个实例的值。
 '''
-
-def ParseSource(html,BallDataList):   
-    dataList = html.xpath('/html/body/div[2]/div[3]/div[3]/div/table/tbody/tr')
-    for data in reversed(dataList):
-         text = data.xpath('.//text()')
-         ball = BallData()
-         ball.red = []
-         ball.ID = int(text[0])
-         ball.date = text[1]
-         for i in range(2,8):
-              ball.red.append(int(text[i]))
-         ball.blue = int(text[8])
-         BallDataList.append(ball)#默认升序
 
 
 def Analyse(sliced_list):
@@ -122,13 +101,40 @@ def Analyse(sliced_list):
      #print("blueTopKeys:",blueTopKeys)
      return redTopKeys 
    
+'''
+(2, 2, 2, 0) 47
+(2, 2, 1, 1) 36
+(2, 1, 2, 1) 32
+(2, 3, 1, 0) 29
+(1, 2, 2, 1) 28
+'''
+def DoCombinationAnalyse(number,red):
+     numList  =[0,0,0,0]
+     Array = [[2, 2, 2, 0],[2, 2, 1, 1],[2, 1, 2, 1],[2, 3, 1, 0],[1, 2, 2, 1]]
+     #Array = [[2, 2, 2, 0],[2, 2, 1, 1]]
+     for num in red:
+            i = int(num / 10)
+            numList[i] += 1
+
+   
+     index = int(number / 10)
+
+     for data in Array:
+          if numList[index] < data[index]:
+               ret = True
+               for i in range(len(data)):
+                    if numList[i] > data[i]:
+                         ret = False
+               if ret == True:
+                    return True
+                    
+     return False
 
 
-def DoRecommend(fileName,sliced_list,redTopKeys):
+def DoRecommend(recommendCount,fileName,sliced_list,redTopKeys,isPrint):
      redFilterNumber = []
      blueFilterNumber = []
      filterCountTT = filterCount = 3
-     recommendCount = 100
 
      for ball in reversed(sliced_list):    
           if filterCount == 0:
@@ -162,6 +168,10 @@ def DoRecommend(fileName,sliced_list,redTopKeys):
                #random.seed(t)
                num = random.randint(1, 33)
                if num not in recommend_red:
+                    isOk = DoCombinationAnalyse(num,recommend_red)
+                    if isOk == False:
+                         continue
+
                     if num in redTopKeys:
                          recommend_red.append(num)         
                     else:           
@@ -187,75 +197,28 @@ def DoRecommend(fileName,sliced_list,redTopKeys):
                          break
           recommend_red.sort()
           #recommend_blue.sort()
-          #print(f"{recommend_red}--{recommend_blue}")
+          if isPrint == True:
+               print(f"{recommend_red}--{recommend_blue}")
+
           file.write(f"{recommend_red}--{recommend_blue}\n")
        file.write("\n")
      file.close()
 
 
 
-
-
-def SearchDate(browser,start,end,BallDataList):
-    custom = browser.find_element(by.By.XPATH,'/html/body/div[2]/div[3]/div[2]/div[1]/div/div[1]/strong')
-    custom.click()
-    sleep(1)
-    t = browser.find_element(by.By.XPATH,'/html/body/div[2]/div[3]/div[2]/div[1]/div/div[2]/div[1]/div[3]')
-    t.click()
-    sleep(1)
-
-    starInput = browser.find_element(by.By.XPATH,'//*[@id="startC"]')
-    starInput.clear()
-    starInput.send_keys(start.strftime('%Y-%m-%d'))
-    endInput =  browser.find_element(by.By.XPATH,'//*[@id="endC"]')
-    endInput.clear()
-    endInput.send_keys(end.strftime('%Y-%m-%d'))
-    search = browser.find_element(by.By.XPATH,'/html/body/div[2]/div[3]/div[2]/div[1]/div/div[2]/div[4]/div[2]/div[2]')
-    search.click()
-    sleep(2) 
-    html =etree.HTML(browser.page_source)
-    ParseSource(html,BallDataList)
-   
-def GetHtml(startDate):
-    option = ChromeOptions() 
-    option.add_argument('--headless')
-    option.add_experimental_option('excludeSwitches',['enable-automation'])
-    option.add_experimental_option('useAutomationExtension',False)
-
-    browser = webdriver.Chrome(option)
-    browser.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument',{'source' : 'Object.defineProperty(navigator,"webdriver",{get:()=>undefined})'})
-    #browser.set_window_size(1366,768)
-    browser.maximize_window()
-    browser.get('https://www.zhcw.com/kjxx/ssq/')
-    sleep(2)
-
-    
-    endDate = datetime.now().date().strftime('%Y-%m-%d')
-
-    start = datetime.strptime(startDate,'%Y-%m-%d')
-    end = datetime.strptime(endDate,'%Y-%m-%d')
-    delta = end - start
-    diff = delta.days
+if __name__ == "__main__":
 
     BallDataList = []
-    while diff > 90:
-            newDate = start + timedelta(days=90)
-            SearchDate(browser,start,newDate,BallDataList)
-            start = newDate + timedelta(days=1)
-            delta = end - start
-            diff =  delta.days 
+    AllDataMap = Selenium_Result_Update.GetFileDate('2024-01-01')
+    for data in AllDataMap.values():
+         BallDataList.append(data)
 
-    SearchDate(browser,start,end,BallDataList)
-    return BallDataList
-
-if __name__ == "__main__":
-    
-      
-    BallDataList = GetHtml('2024-01-01')
     redTopKeys = Analyse(BallDataList)
     fileName = f'./OutPut/DoubleBall_senge.txt'
-    DoRecommend(fileName,BallDataList,redTopKeys)
-'''
+    recommendCount = 100
+    #DoRecommend(recommendCount,fileName,BallDataList,redTopKeys,True)
+
+    #Test Recommend
     startID = BallDataList[0].ID
     endID = BallDataList[len(BallDataList)-1].ID
     legth = len(BallDataList)
@@ -265,9 +228,8 @@ if __name__ == "__main__":
           sliced_list = BallDataList[:i]
           redTopKeys = Analyse(sliced_list)
           fileName = f'./OutPut/DoubleBall_{i}.txt'
-          DoRecommend(fileName,sliced_list,redTopKeys)
+          DoRecommend(recommendCount,fileName,sliced_list,redTopKeys,False)
           nextData = BallDataList[i]
           #print('nextID',nextData.ID)
           Selenium_Recommend_Analyse.Doit(fileName,nextData.red,[nextData.blue])
 
-'''
