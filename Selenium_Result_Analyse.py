@@ -10,19 +10,10 @@ class AnalyseData:
 
 
 if __name__ == "__main__":
-    AllDataMap = Selenium_Result_Update.LoadFile('./OutPut/DoubleBallData.txt')
 
-    keys_to_delete = []
-    startDate = datetime.strptime('2024-01-01','%Y-%m-%d')
-    for key, value in AllDataMap.items():
-        date = datetime.strptime(value.date,'%Y-%m-%d')
-        if date < startDate:
-            keys_to_delete.append(key)
-
-    for key in keys_to_delete:
-        del AllDataMap[key]
-
-    print('startDate',startDate.date()) 
+    dateStr = '2020-0-01'
+    AllDataMap = Selenium_Result_Update.GetFileDate(dateStr)
+    print('startDate',dateStr) 
     AnalyseMap =defaultdict(int)
     TotalCountMap =defaultdict(int)
     BlueCountMap = defaultdict(int)
