@@ -36,6 +36,7 @@ class MatchData:
     result = 0
     state = ''
     exception = False
+    zeroException = False
 
 
 def GetWinType(index):
@@ -70,7 +71,7 @@ chinese_month_dict = {
     '十二月': 12
 }
 
-def IsException(str1,str2,str3):
+def IsException(str1,str2,str3,value):
     result1 = re.sub(r'[^\d.]+', '', str1)
     result2 = re.sub(r'[^\d.]+', '', str2)
     result3 = re.sub(r'[^\d.]+', '', str3)
@@ -78,7 +79,7 @@ def IsException(str1,str2,str3):
     number2 = float(result2)
     number3 = float(result3)
     e = False
-    if number1 - exceptionValue > number2 or number1 - exceptionValue > number3:
+    if number1 - value > number2 or number1 - value > number3:
           e = True
     return e
 
@@ -137,15 +138,19 @@ def ParseSource(html):
         if '#' in cow[8]:
             match.result = 1
             match.win = blue_color + cow[8] + reset_color
-            match.exception = IsException(cow[8],cow[9],cow[10])
+            match.exception = IsException(cow[8],cow[9],cow[10],exceptionValue)
+            match.zeroException = IsException(cow[8],cow[9],cow[10],0)
+
         if '#' in cow[9]:
             match.result = 2
             match.flat = blue_color + cow[9] + reset_color
-            match.exception = IsException(cow[9],cow[8],cow[10])
+            match.exception = IsException(cow[9],cow[8],cow[10],exceptionValue)
+            match.zeroException = IsException(cow[9],cow[8],cow[10],0)
         if '#' in cow[10]:
             match.result = 3
             match.lose = blue_color + cow[10] + reset_color
-            match.exception = IsException(cow[10],cow[8],cow[9])
+            match.exception = IsException(cow[10],cow[8],cow[9],exceptionValue)
+            match.zeroException = IsException(cow[10],cow[8],cow[9],0)
         AddToMap(match)
 
 def PrintResult():
@@ -167,6 +172,7 @@ def PrintResult():
                 print(info_str,end='')
                 cleaned_str = re.sub(r'\033\[34m|\033\[0m', '', info_str)
                 file.write(cleaned_str)
+    
 
     for name, matchList in matchMap.items():
         total = len(matchList)
@@ -177,9 +183,22 @@ def PrintResult():
         
         float_num = (num / total)*100
         fstr = "{:.2f}".format(float_num)
-        info_str = f"{name} 总场数={total}, 异常数={num}, 异常率={fstr}%\n"
+        info_str = f"{name} 总场数={total}, 异常数={num}, 异常率={fstr}% \n"
         print(info_str,end='')
-        file.write(info_str)      
+        file.write(info_str)    
+    
+    for name, matchList in matchMap.items():
+        total = len(matchList)
+        zeroNum = 0
+        for match in matchList:
+            if match.zeroException == True:
+                zeroNum += 1
+        
+        float_num2 = (zeroNum / total)*100
+        fstr2 = "{:.2f}".format(float_num2)
+        info_str = f"{name} 总场数={total}, 异常数={zeroNum} ,零值异常率={fstr2}\n"
+        print(info_str,end='')
+        file.write(info_str)     
         
     file.close()
       
@@ -268,8 +287,8 @@ if __name__ == "__main__":
     sleep(2)
 
     GUID = 1000  
-    searchName = '欧国联' #英锦标赛
-    exceptionValue = 0 #异常值  
+    searchName = '英超' #英锦标赛
+    exceptionValue = 1 #异常值  
     SearchYear = 2024
     matchMap = {}
 
@@ -278,7 +297,7 @@ if __name__ == "__main__":
     startMonth = 7
     startDay  = 1 
     endMonth = 9
-    endDay = 7
+    endDay = 27
  
 
     if(searchName != 'all'):
