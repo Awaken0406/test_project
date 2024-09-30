@@ -38,11 +38,14 @@ def Print_Double(AllDataList):
     one=two=three=four=five=six=0
     for data in AllDataList:
         if data.front_hit_count == 6 and data.back_hit_count == 1:
+            print('one',data.frontStr,data.backStr)
             one += 1
         elif data.front_hit_count == 6 and data.back_hit_count == 0:
             two += 1
+            print('two',data.frontStr,data.backStr)
         elif data.front_hit_count == 5 and data.back_hit_count == 1:
             three += 1
+            print('three',data.frontStr,data.backStr)
         elif (data.front_hit_count == 5 and data.back_hit_count == 0) or (data.front_hit_count == 4 and data.back_hit_count == 1):
              four += 1
         elif (data.front_hit_count == 4 and data.back_hit_count == 0) or (data.front_hit_count == 3 and data.back_hit_count == 1):
@@ -66,8 +69,9 @@ def Print_Double(AllDataList):
              six1 += 1
     #print('DOUBLE:')
     money = one*6000000 + two*100000 + three*3000 + four*200 + five*10 + six*5   
-    print(f'{blue_color}One:{one},Two:{two},Three:{three},Four:{four},Five:{five},Six:{six}{reset_color}')
-    print(f'{blue_color}money:{money}{reset_color}')
+    #print(f'{blue_color}One:{one},Two:{two},Three:{three},Four:{four},Five:{five},Six:{six}{reset_color}')
+    #print(f'{blue_color}money:{money}{reset_color}')
+    return money
 '''
     print('SINGLE:')
     money1 = one1*6000000 + two1*100000 + three1*3000 + four1*200 + five1*10 + six1*5   
@@ -93,7 +97,9 @@ def LoadFile(fileName,AllDataList,find_front,find_back):
         data.front = front_array
         data.back = back_array
         AllDataList.append(data)
-    
+    AnalyseFile(AllDataList,find_front,find_back)
+
+def AnalyseFile(AllDataList,find_front,find_back):   
     for data in AllDataList:
         front_hit_count = 0
         back_hit_count = 0
@@ -102,8 +108,6 @@ def LoadFile(fileName,AllDataList,find_front,find_back):
         backStr = ''
         single_backStr = ''
         
-        
-
         for num in  data.front:
             if num in find_front:
                 front_hit_count += 1
@@ -168,11 +172,9 @@ class DataList:
         allHit = False
 
 
-def Doit(fileName,find_front,find_back):
-    print('FileName:',fileName)
-    AllDataList = []   
-    LoadFile(fileName,AllDataList,find_front,find_back)
-    Print_Double(AllDataList)
+def Doit(AllDataList,find_front,find_back):
+    AnalyseFile(AllDataList,find_front,find_back)
+    return Print_Double(AllDataList)
     #Print_DaLeTou(AllDataList)
 
 if __name__ == "__main__":
