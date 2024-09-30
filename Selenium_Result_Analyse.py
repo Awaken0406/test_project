@@ -1,6 +1,5 @@
 from collections import OrderedDict, defaultdict
 import Selenium_Result_Update
-from Selenium_Result_Update import BallDataEx
 from datetime import datetime, timedelta
 
 class AnalyseData:
@@ -11,7 +10,7 @@ class AnalyseData:
 
 if __name__ == "__main__":
 
-    dateStr = '2020-0-01'
+    dateStr = '2024-01-01'
     AllDataMap = Selenium_Result_Update.GetFileDate(dateStr)
     print('startDate',dateStr) 
     AnalyseMap =defaultdict(int)
@@ -61,7 +60,7 @@ if __name__ == "__main__":
     sorted_items = sorted(tupleCount.items(), key=lambda x: x[1], reverse=True)
     tupleCount = OrderedDict(sorted_items)
 
-    #组合
+
     #print('Red')
     #for k,count in tupleCount.items():
     #    print(k,count)
