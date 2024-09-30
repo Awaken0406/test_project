@@ -12,7 +12,8 @@ import random
 import time
 import Selenium_Result_Update
 import Selenium_Recommend_Analyse
-
+import hashlib
+import string
 
 
 
@@ -111,7 +112,6 @@ def Analyse(sliced_list):
 def DoCombinationAnalyse(number,red):
      numList  =[0,0,0,0]
      Array = [[2, 2, 2, 0],[2, 2, 1, 1],[2, 1, 2, 1],[2, 3, 1, 0],[1, 2, 2, 1]]
-     #Array = [[2, 2, 2, 0],[2, 2, 1, 1]]
      for num in red:
             i = int(num / 10)
             numList[i] += 1
@@ -131,7 +131,35 @@ def DoCombinationAnalyse(number,red):
      return False
 
 
-def DoRecommend(recommendCount,fileName,sliced_list,redTopKeys,isPrint):
+# 生成随机字符串
+def generate_random_string(length):
+    letters = string.ascii_letters
+    return ''.join(random.choice(letters) for _ in range(length))
+
+
+def generate_random_integer(min_val, max_val):
+    return random.randint(min_val, max_val)
+
+def generate_md5_hashed_integer(maxValue):
+
+    value = 0
+    while(True):
+          if value > 0:
+              break        
+          random_chars = generate_random_string(5)
+          current_time = str(int(time.time()))
+          random_number = str(generate_random_integer(1, 2000))
+  
+
+          input_data = random_chars + current_time + random_number
+          md5_hash = hashlib.md5(input_data.encode()).hexdigest()
+          hashed_integer = int(md5_hash, 16)
+          value = hashed_integer%maxValue
+         
+    return value
+
+
+def DoRecommend(recommendCount,fileName,sliced_list,redTopKeys,isPrint,isWrite):
      redFilterNumber = []
      blueFilterNumber = []
      filterCountTT = filterCount = 3
@@ -155,32 +183,36 @@ def DoRecommend(recommendCount,fileName,sliced_list,redTopKeys,isPrint):
      recommend_red = []
      recommend_blue = []
      current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-     with open(fileName, "a",encoding="utf-8") as file:
-           
-       #print(f'recommend:{current_time_str}')    
-       file.write(f'recommend:{current_time_str}\n')
-       for i in range(recommendCount):
+
+     AllDataList = []
+
+
+     for i in range(recommendCount):
           recommend_red = []
           recommend_blue = []
           while True:
                #sleep(0.1)
                #t = int(time.time() * 10000000)
                #random.seed(t)
-               num = random.randint(1, 33)
+               #num = random.randint(1, 33)
+               num = generate_md5_hashed_integer(34)
                if num not in recommend_red:
                     isOk = DoCombinationAnalyse(num,recommend_red)
                     if isOk == False:
                          continue
-
+                    
+                    
                     if num in redTopKeys:
                          recommend_red.append(num)         
                     else:           
                          if num in redFilterNumber:
+                              
                               boolNum = random.randint(1,2)
+                              #boolNum = generate_md5_hashed_integer(3)
                               if boolNum == 2:
                                   recommend_red.append(num)    
                          else:
-                              recommend_red.append(num)   
+                              recommend_red.append(num) 
                          
                if(len(recommend_red) == 6):
                     break
@@ -189,22 +221,51 @@ def DoRecommend(recommendCount,fileName,sliced_list,redTopKeys,isPrint):
                #sleep(0.1)
                #t = int(time.time() * 10000000)
                #random.seed(t)
-               num = random.randint(1, 16)
+               #num = random.randint(1, 16)
+               num = generate_md5_hashed_integer(17)
                if num not in recommend_blue:
                     if num not in blueFilterNumber:
                          recommend_blue.append(num)
-                    if(len(recommend_blue) == 2):
+               if(len(recommend_blue) == 1):
                          break
           recommend_red.sort()
           #recommend_blue.sort()
           if isPrint == True:
                print(f"{recommend_red}--{recommend_blue}")
 
-          file.write(f"{recommend_red}--{recommend_blue}\n")
-       file.write("\n")
-     file.close()
+          dd = Selenium_Recommend_Analyse.DataList()
+          dd.front = recommend_red
+          dd.back = recommend_blue
+          AllDataList.append(dd)
 
+     if isWrite == True: 
+          file = open(fileName, "w",encoding="utf-8") 
+          file.write(f'recommend:{current_time_str}\n')
+          for d in AllDataList:    
+               file.write(f"{d.front}--{d.back}\n")
+          file.write("\n")
+          file.close()
+     return AllDataList
 
+def Test(redTopKeys,recommendCount,BallDataList):
+
+    legth = len(BallDataList)
+    totalMoney = 0
+    GroupCount = 0
+    for i in range(legth-(legth-50), legth):
+          #sleep(0.1)
+          random.seed(int(time.time() * 1000000))
+          sliced_list = BallDataList[:i]
+          #redTopKeys = Analyse(sliced_list)
+          fileName = f'./OutPut/DoubleBall_{i}.txt'
+          AllDataList = DoRecommend(recommendCount,fileName,sliced_list,redTopKeys,False,False)
+          nextData = BallDataList[i]
+          #print('nextID',nextData.ID)
+          money = Selenium_Recommend_Analyse.Doit(AllDataList,nextData.red,[nextData.blue])
+          totalMoney += money
+          GroupCount += 1
+    print('GroupCount:',GroupCount,'recommendCount:',recommendCount, 'cost:',recommendCount*2*GroupCount,'total:',totalMoney)
+    return totalMoney
 
 if __name__ == "__main__":
 
@@ -215,21 +276,22 @@ if __name__ == "__main__":
 
     redTopKeys = Analyse(BallDataList)
     fileName = f'./OutPut/DoubleBall_senge.txt'
-    recommendCount = 100
-    #DoRecommend(recommendCount,fileName,BallDataList,redTopKeys,True)
+    #DoRecommend(3,fileName,BallDataList,redTopKeys,True,True)
 
     #Test Recommend
-    startID = BallDataList[0].ID
-    endID = BallDataList[len(BallDataList)-1].ID
-    legth = len(BallDataList)
-    for i in range(legth-(legth-50), legth):
-          sleep(0.1)
-          random.seed(int(time.time() * 1000000))
-          sliced_list = BallDataList[:i]
-          redTopKeys = Analyse(sliced_list)
-          fileName = f'./OutPut/DoubleBall_{i}.txt'
-          DoRecommend(recommendCount,fileName,sliced_list,redTopKeys,False)
-          nextData = BallDataList[i]
-          #print('nextID',nextData.ID)
-          Selenium_Recommend_Analyse.Doit(fileName,nextData.red,[nextData.blue])
+    recommendCount = 100
+    times = 50
+    all = 0
+
+
+    for i in range(times):
+       start_time = time.perf_counter()
+       all += Test(redTopKeys,recommendCount,BallDataList)
+       end_time = time.perf_counter()
+       execution_time = end_time - start_time
+       #print(f"time:{execution_time:.6f}")
+    avg = all / times
+    print('AVG:',avg)
+    
+     
 
