@@ -111,12 +111,13 @@ def Analyse(sliced_list):
 '''
 def DoCombinationAnalyse(number,red):
      numList  =[0,0,0,0]
+     #0,10,20,30
      Array = [[2, 2, 2, 0],[2, 2, 1, 1],[2, 1, 2, 1],[2, 3, 1, 0],[1, 2, 2, 1]]
      for num in red:
             i = int(num / 10)
             numList[i] += 1
 
-   
+     #十位还是各位
      index = int(number / 10)
 
      for data in Array:
@@ -159,6 +160,33 @@ def generate_md5_hashed_integer(maxValue):
     return value
 
 
+def RecommendRed(redFilterNumber,mustFilter, count):
+     recommend_red = []
+     while True:
+               num = generate_md5_hashed_integer(34)
+               if num not in recommend_red:
+                  if num not in mustFilter:
+                    isOk = DoCombinationAnalyse(num,recommend_red)
+                    if isOk == False:
+                         continue
+                    
+                    
+                    if num in redTopKeys:
+                         recommend_red.append(num)         
+                    else:           
+                         if num in redFilterNumber:
+                              
+                              boolNum = random.randint(1,2)
+                              #boolNum = generate_md5_hashed_integer(3)
+                              if boolNum == 2:
+                                  recommend_red.append(num)    
+                         else:
+                              recommend_red.append(num) 
+                         
+               if(len(recommend_red) == count):
+                    break
+     return recommend_red
+
 def DoRecommend(recommendCount,fileName,sliced_list,redTopKeys,isPrint,isWrite):
      redFilterNumber = []
      blueFilterNumber = []
@@ -190,43 +218,18 @@ def DoRecommend(recommendCount,fileName,sliced_list,redTopKeys,isPrint,isWrite):
      for i in range(recommendCount):
           recommend_red = []
           recommend_blue = []
-          while True:
-               #sleep(0.1)
-               #t = int(time.time() * 10000000)
-               #random.seed(t)
-               #num = random.randint(1, 33)
-               num = generate_md5_hashed_integer(34)
-               if num not in recommend_red:
-                    isOk = DoCombinationAnalyse(num,recommend_red)
-                    if isOk == False:
-                         continue
-                    
-                    
-                    if num in redTopKeys:
-                         recommend_red.append(num)         
-                    else:           
-                         if num in redFilterNumber:
-                              
-                              boolNum = random.randint(1,2)
-                              #boolNum = generate_md5_hashed_integer(3)
-                              if boolNum == 2:
-                                  recommend_red.append(num)    
-                         else:
-                              recommend_red.append(num) 
-                         
-               if(len(recommend_red) == 6):
-                    break
-
-          while True:
-               #sleep(0.1)
-               #t = int(time.time() * 10000000)
-               #random.seed(t)
-               #num = random.randint(1, 16)
+          
+          redList = RecommendRed(redFilterNumber,[],6)
+          #额外
+          redEx = RecommendRed(redFilterNumber , redList,2)
+          recommend_red = redList + redEx
+          
+          while True: 
                num = generate_md5_hashed_integer(17)
                if num not in recommend_blue:
-                    if num not in blueFilterNumber:
+                    #if num not in blueFilterNumber:
                          recommend_blue.append(num)
-               if(len(recommend_blue) == 1):
+               if(len(recommend_blue) == 3):
                          break
           recommend_red.sort()
           #recommend_blue.sort()
