@@ -14,6 +14,7 @@ import Selenium_Result_Update
 import Selenium_Recommend_Analyse
 import hashlib
 import string
+import V3.mysql_db as db
 
 
 
@@ -108,11 +109,29 @@ def Analyse(sliced_list):
 (2, 1, 2, 1) 32
 (2, 3, 1, 0) 29
 (1, 2, 2, 1) 28
+
+(2, 2, 2, 0) 9
+(2, 2, 1, 1) 8
+(2, 3, 1, 0) 8
+(2, 0, 3, 1) 7
+(3, 2, 1, 0) 6
+(1, 2, 2, 1) 6
+(2, 1, 3, 0) 6
+(1, 2, 3, 0) 6
+(2, 1, 1, 2) 6
+
+(1, 1, 3, 1) 5
+(1, 3, 2, 0) 4
+(3, 1, 2, 0) 4
+(1, 1, 2, 2) 4
+(3, 3, 0, 0) 4
+(1, 3, 1, 1) 4
 '''
 def DoCombinationAnalyse(number,red):
      numList  =[0,0,0,0]
      #0,10,20,30
-     Array = [[2, 2, 2, 0],[2, 2, 1, 1],[2, 1, 2, 1],[2, 3, 1, 0],[1, 2, 2, 1]]
+     Array = [[2, 2, 2, 0],[2, 2, 1, 1],[2, 1, 2, 1],[2, 3, 1, 0],[1, 2, 2, 1],[2, 0, 3, 1],[3, 2, 1, 0],[2, 1, 3, 0],[2, 1, 1, 2],[1, 2, 3, 0],
+              (1, 1, 3, 1),(1, 3, 2, 0),(3, 1, 2, 0), (1, 1, 2, 2),(3, 3, 0, 0),(1, 3, 1, 1)]
      for num in red:
             i = int(num / 10)
             numList[i] += 1
@@ -160,7 +179,7 @@ def generate_md5_hashed_integer(maxValue):
     return value
 
 
-def RecommendRed(redFilterNumber,mustFilter, count):
+def RecommendRed(redTopKeys,redFilterNumber,mustFilter, count):
      recommend_red = []
      while True:
                num = generate_md5_hashed_integer(34)
@@ -187,7 +206,7 @@ def RecommendRed(redFilterNumber,mustFilter, count):
                     break
      return recommend_red
 
-def DoRecommend(recommendCount,fileName,sliced_list,redTopKeys,isPrint,isWrite):
+def DoRecommend(G_exRed,G_exBlue,recommendCount,fileName,sliced_list,redTopKeys,isPrint,isWrite):
      redFilterNumber = []
      blueFilterNumber = []
      filterCountTT = filterCount = 3
@@ -215,13 +234,14 @@ def DoRecommend(recommendCount,fileName,sliced_list,redTopKeys,isPrint,isWrite):
      AllDataList = []
 
 
+
      for i in range(recommendCount):
           recommend_red = []
           recommend_blue = []
           
-          redList = RecommendRed(redFilterNumber,[],6)
+          redList = RecommendRed(redTopKeys,redFilterNumber,[],6)
           #额外
-          redEx = RecommendRed(redFilterNumber , redList,2)
+          redEx = RecommendRed(redTopKeys,redFilterNumber , redList,G_exRed)
           recommend_red = redList + redEx
           
           while True: 
@@ -229,7 +249,7 @@ def DoRecommend(recommendCount,fileName,sliced_list,redTopKeys,isPrint,isWrite):
                if num not in recommend_blue:
                     #if num not in blueFilterNumber:
                          recommend_blue.append(num)
-               if(len(recommend_blue) == 3):
+               if(len(recommend_blue) == 1 + G_exBlue):
                          break
           recommend_red.sort()
           #recommend_blue.sort()
@@ -242,36 +262,20 @@ def DoRecommend(recommendCount,fileName,sliced_list,redTopKeys,isPrint,isWrite):
           AllDataList.append(dd)
 
      if isWrite == True: 
-          file = open(fileName, "w",encoding="utf-8") 
+          db.SaveDoubleBall(AllDataList)
+
+          '''file = open(fileName, "w",encoding="utf-8") 
           file.write(f'recommend:{current_time_str}\n')
           for d in AllDataList:    
                file.write(f"{d.front}--{d.back}\n")
           file.write("\n")
-          file.close()
+          file.close()'''
      return AllDataList
 
-def Test(redTopKeys,recommendCount,BallDataList):
 
-    legth = len(BallDataList)
-    totalMoney = 0
-    GroupCount = 0
-    for i in range(legth-(legth-50), legth):
-          #sleep(0.1)
-          random.seed(int(time.time() * 1000000))
-          sliced_list = BallDataList[:i]
-          #redTopKeys = Analyse(sliced_list)
-          fileName = f'./OutPut/DoubleBall_{i}.txt'
-          AllDataList = DoRecommend(recommendCount,fileName,sliced_list,redTopKeys,False,False)
-          nextData = BallDataList[i]
-          #print('nextID',nextData.ID)
-          money = Selenium_Recommend_Analyse.Doit(AllDataList,nextData.red,[nextData.blue])
-          totalMoney += money
-          GroupCount += 1
-    print('GroupCount:',GroupCount,'recommendCount:',recommendCount, 'cost:',recommendCount*2*GroupCount,'total:',totalMoney)
-    return totalMoney
 
 if __name__ == "__main__":
-
+    
     BallDataList = []
     AllDataMap = Selenium_Result_Update.GetFileDate('2024-01-01')
     for data in AllDataMap.values():
@@ -279,22 +283,9 @@ if __name__ == "__main__":
 
     redTopKeys = Analyse(BallDataList)
     fileName = f'./OutPut/DoubleBall_senge.txt'
-    #DoRecommend(3,fileName,BallDataList,redTopKeys,True,True)
-
-    #Test Recommend
-    recommendCount = 100
-    times = 50
-    all = 0
-
-
-    for i in range(times):
-       start_time = time.perf_counter()
-       all += Test(redTopKeys,recommendCount,BallDataList)
-       end_time = time.perf_counter()
-       execution_time = end_time - start_time
-       #print(f"time:{execution_time:.6f}")
-    avg = all / times
-    print('AVG:',avg)
+    G_exRed = 2#加N个红球
+    G_exBlue = 2#加N个篮球
+    count = 100#推荐组数
+    DoRecommend(G_exRed,G_exBlue,count,fileName,BallDataList,redTopKeys,True,True)
     
      
-
