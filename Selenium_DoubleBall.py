@@ -14,7 +14,7 @@ import Selenium_Result_Update
 import Selenium_Recommend_Analyse
 import hashlib
 import string
-import V3.mysql_db as db
+
 
 
 
@@ -101,7 +101,7 @@ def Analyse(sliced_list):
      #print("BlueTotalTimes:",BlueTotalTimes)
      #print("redTopKeys:",redTopKeys)     
      #print("blueTopKeys:",blueTopKeys)
-     return redTopKeys 
+     return redTopKeys,blueTopKeys
    
 '''
 (2, 2, 2, 0) 47
@@ -157,8 +157,6 @@ def generate_random_string(length):
     return ''.join(random.choice(letters) for _ in range(length))
 
 
-def generate_random_integer(min_val, max_val):
-    return random.randint(min_val, max_val)
 
 def generate_md5_hashed_integer(maxValue):
 
@@ -166,50 +164,69 @@ def generate_md5_hashed_integer(maxValue):
     while(True):
           if value > 0:
               break        
-          random_chars = generate_random_string(5)
+          random_chars = generate_random_string(10)
           current_time = str(int(time.time()))
-          random_number = str(generate_random_integer(1, 2000))
+          random_number = str(random.randint(1, 2000))
   
 
-          input_data = random_chars + current_time + random_number
+          input_data = random_chars  + current_time + random_number
           md5_hash = hashlib.md5(input_data.encode()).hexdigest()
-          hashed_integer = int(md5_hash, 16)
-          value = hashed_integer%maxValue
-         
-    return value
+          hashed_integer = str(int(md5_hash, 16))
+          start_index = int(len(hashed_integer) / 2)
+          middle_substring = hashed_integer[start_index:start_index + 6]
+
+          result = int(middle_substring)
+          value = (result)%maxValue
+    #print("value:",value)
+    return int(value)
 
 
-def RecommendRed(redTopKeys,redFilterNumber,mustFilter, count):
+def RecommendRed(redTopKeys,redFilterNumber,mustFilter, count, continuous):
      recommend_red = []
+     isContinuous = False
      while True:
-               num = generate_md5_hashed_integer(34)
+               if(len(recommend_red) >= count):
+                    break
+               #num = generate_md5_hashed_integer(34)
+               num = random.randint(1, 33)
                if num not in recommend_red:
                   if num not in mustFilter:
                     isOk = DoCombinationAnalyse(num,recommend_red)
                     if isOk == False:
                          continue
                     
-                    
+                    isOK = False
                     if num in redTopKeys:
-                         recommend_red.append(num)         
-                    else:           
-                         if num in redFilterNumber:
-                              
-                              boolNum = random.randint(1,2)
-                              #boolNum = generate_md5_hashed_integer(3)
-                              if boolNum == 2:
-                                  recommend_red.append(num)    
-                         else:
-                              recommend_red.append(num) 
+                         isOK = True     
+                    elif num in redFilterNumber:
+                         boolNum = random.randint(1,2)
+                         if boolNum == 2:
+                              isOK = True    
+                    else:                           
+                         boolNum = random.randint(1,2)
+                         if boolNum == 2:
+                              isOK = True     
+
+                    if isOk == True:
+                         recommend_red.append(num) 
+                         if continuous == True and isContinuous == False and len(recommend_red) + 1 < count and num > 10 and num < 30:
+                            if num +  1 not in recommend_red:
+                              boolNum = random.randint(1,5)
+                              if boolNum == 5:
+                                   ok = DoCombinationAnalyse(num +  1,recommend_red)
+                                   if ok == True:
+                                        recommend_red.append(num +  1) 
+                                        isContinuous = True
+                                        
                          
-               if(len(recommend_red) == count):
-                    break
+
      return recommend_red
 
-def DoRecommend(G_exRed,G_exBlue,recommendCount,fileName,sliced_list,redTopKeys,isPrint,isWrite):
+def DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,sliced_list,isPrint,isWrite):
      redFilterNumber = []
      blueFilterNumber = []
      filterCountTT = filterCount = 3
+ 
 
      for ball in reversed(sliced_list):    
           if filterCount == 0:
@@ -217,7 +234,7 @@ def DoRecommend(G_exRed,G_exBlue,recommendCount,fileName,sliced_list,redTopKeys,
           filterCount -= 1
           redFilterNumber += ball.red
 
-     bluefilterCountTT = bluefilterCount = 5
+     bluefilterCount = 3#最近3期
      for ball in reversed(sliced_list):    
           if bluefilterCount == 0:
                break
@@ -225,8 +242,7 @@ def DoRecommend(G_exRed,G_exBlue,recommendCount,fileName,sliced_list,redTopKeys,
           blueFilterNumber.append(ball.blue)
      redFilterNumber = list(set(redFilterNumber))
      blueFilterNumber = list(set(blueFilterNumber))
-     #print(f'RedfilterCount:{filterCountTT},BluefilterCount:{bluefilterCountTT},filter_red:{redFilterNumber},filter_blue:{blueFilterNumber}')
-
+    
      recommend_red = []
      recommend_blue = []
      current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -239,18 +255,29 @@ def DoRecommend(G_exRed,G_exBlue,recommendCount,fileName,sliced_list,redTopKeys,
           recommend_red = []
           recommend_blue = []
           
-          redList = RecommendRed(redTopKeys,redFilterNumber,[],6)
+          redList = RecommendRed(redTopKeys,redFilterNumber,[],6,True)
           #额外
-          redEx = RecommendRed(redTopKeys,redFilterNumber , redList,G_exRed)
+          redEx = RecommendRed(redTopKeys , redFilterNumber,redList,G_exRed,False)
           recommend_red = redList + redEx
           
           while True: 
-               num = generate_md5_hashed_integer(17)
-               if num not in recommend_blue:
-                    #if num not in blueFilterNumber:
-                         recommend_blue.append(num)
                if(len(recommend_blue) == 1 + G_exBlue):
                          break
+               #num = generate_md5_hashed_integer(17)
+               num = random.randint(1, 16)
+               if num not in recommend_blue:
+                    if num in blueTopKeys:
+                         recommend_blue.append(num)
+                    elif num in blueFilterNumber:
+                         boolNum = random.randint(1,5)
+                         if boolNum == 5:
+                              recommend_blue.append(num)
+                         
+                    else:
+                         boolNum = random.randint(1,2)
+                         if boolNum == 2:
+                              recommend_blue.append(num)
+
           recommend_red.sort()
           #recommend_blue.sort()
           if isPrint == True:
@@ -277,15 +304,14 @@ def DoRecommend(G_exRed,G_exBlue,recommendCount,fileName,sliced_list,redTopKeys,
 if __name__ == "__main__":
     
     BallDataList = []
-    AllDataMap = Selenium_Result_Update.GetFileDate('2024-01-01')
+    AllDataMap = Selenium_Result_Update.GetFileDate('2024-01-01')#recommend number date
     for data in AllDataMap.values():
          BallDataList.append(data)
-
-    redTopKeys = Analyse(BallDataList)
+    redTopKeys,blueTopKeys = Analyse(BallDataList)
     fileName = f'./OutPut/DoubleBall_senge.txt'
-    G_exRed = 2#加N个红球
-    G_exBlue = 2#加N个篮球
-    count = 100#推荐组数
-    DoRecommend(G_exRed,G_exBlue,count,fileName,BallDataList,redTopKeys,True,True)
+    G_exRed = 2
+    G_exBlue = 2
+    recommendCount = 100
+    DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,fileName,BallDataList,True,True)
     
      
