@@ -18,7 +18,7 @@ import Selenium_DoubleBall
 
 
 
-def Test(count,recommendCount,BallDataList,redTopKeys,blueTopKeys):
+def Test(count,recommendCount,BallDataList):
 
     legth = len(BallDataList)
     totalMoney = 0
@@ -30,7 +30,9 @@ def Test(count,recommendCount,BallDataList,redTopKeys,blueTopKeys):
           #random.seed(seed)
           
           sliced_list = BallDataList[:i]
+          redTopKeys,blueTopKeys = Selenium_DoubleBall.Analyse(sliced_list)
           AllDataList = Selenium_DoubleBall.DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,sliced_list,False,False)
+   
           nextData = BallDataList[i]
           #print('nextID',nextData.ID)
           money = Selenium_Recommend_Analyse.Doit(AllDataList,nextData.red,[nextData.blue])
@@ -61,11 +63,11 @@ if __name__ == "__main__":
     AllDataMap = Selenium_Result_Update.GetFileDate('2022-01-01')#recommend number date
     for data in AllDataMap.values():
          BallDataList.append(data)
-    redTopKeys,blueTopKeys = Selenium_DoubleBall.Analyse(BallDataList)
+
    
     #Test Recommend
-    recommendCount = 3
-    times = 10000
+    recommendCount = 10
+    times = 100
     G_exRed = 2
     G_exBlue = 2 
     G_GroupCount = 50
@@ -79,14 +81,14 @@ if __name__ == "__main__":
 
     seedList = []
     #(7,1)=7, (8,1)=28, (8,2)=56 (8,3)=64
-    i=0
-    #for i in range(times):
-    while(True):
+    i=100000000
+    for i in range(times):
+    #while(True):
        i += 1
        seed = int(time.time() * 10000000)
-       random.seed(i)
+       random.seed(seed)
        #start_time = time.perf_counter()
-       totalMoney,totalCost,isSuc = Test(i,recommendCount,BallDataList,redTopKeys,blueTopKeys)
+       totalMoney,totalCost,isSuc = Test(i,recommendCount,BallDataList)
        allTotalMoney += totalMoney
        alltotalCost += totalCost
        #end_time = time.perf_counter()
