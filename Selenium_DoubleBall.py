@@ -14,6 +14,7 @@ import Selenium_Result_Update
 import Selenium_Recommend_Analyse
 import hashlib
 import string
+import V3.mysql_db as db
 
 
 
@@ -304,14 +305,34 @@ def DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,sliced_li
 if __name__ == "__main__":
     
     BallDataList = []
-    AllDataMap = Selenium_Result_Update.GetFileDate('2024-01-01')#recommend number date
+    AllDataMap = Selenium_Result_Update.GetFileDate('2023-01-01')
     for data in AllDataMap.values():
          BallDataList.append(data)
     redTopKeys,blueTopKeys = Analyse(BallDataList)
     fileName = f'./OutPut/DoubleBall_senge.txt'
-    G_exRed = 2
-    G_exBlue = 2
-    recommendCount = 100
-    DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,fileName,BallDataList,True,True)
+    G_exRed = 0
+    G_exBlue = 0
+    recommendCount = 10000
+    seed = int(time.time() * 10000000)
+    random.seed(seed)
+    AllDataList = DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,BallDataList,True,True)
+
+    RedMap = defaultdict(int)
+    BlueMap = defaultdict(int)
+    for i in range(len(AllDataList)):
+         info  = AllDataList[i]
+         BlueMap[info.back[0]] += 1
+         for d in range(len(info.front)):
+              num = info.front[d]
+              RedMap[num] += 1
+    RedMap = dict(sorted(RedMap.items(), key=lambda x: x[1], reverse=True))
+    BlueMap = dict(sorted(BlueMap.items(), key=lambda x: x[1], reverse=True))
+    print("RedMap:") 
+    for k,count in RedMap.items():
+          print(k,count)   
+    print("BlueMap:") 
+    for k,count in BlueMap.items():
+       print(k,count)  
+    
     
      
