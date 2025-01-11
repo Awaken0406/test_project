@@ -17,6 +17,52 @@ import string
 import Selenium_DoubleBall
 
 
+def CulcStage(AllDataList,red,blue,redIndexCountMap,blueIndexCountMap):
+    RedMap = defaultdict(int)
+    BlueMap = defaultdict(int)
+    for i in range(len(AllDataList)):
+         info  = AllDataList[i]
+         BlueMap[info.back[0]] += 1
+         for d in range(len(info.front)):
+              num = info.front[d]
+              RedMap[num] += 1
+    RedMap = dict(sorted(RedMap.items(), key=lambda x: x[1], reverse=True))
+    BlueMap = dict(sorted(BlueMap.items(), key=lambda x: x[1], reverse=True))
+    #print(f"RedSize:{len(RedMap)},RedMap:{RedMap}") 
+    #print(f"BlueSize:{len(BlueMap)},BlueMap:{BlueMap}")
+    redIndexMap =  defaultdict(int)
+
+    for r in  red:
+        index = 0
+        for k,v in RedMap.items():
+            index+=1
+            if(k==r):
+                redIndexMap[r] = index
+                redIndexCountMap[index] += 1
+                break
+
+    bindex = 0
+    for k,v in BlueMap.items():
+        bindex+=1
+        if(k==blue):
+            blueIndexCountMap[bindex] += 1
+            break
+
+    #for k,v in redIndexMap.items():
+    #    print(f'num:{k},index:{v}')
+
+
+
+def TextEx(recommendCount,BallDataList,redIndexCountMap,blueIndexCountMap):
+    legth = len(BallDataList)
+    for i in range(legth - G_GroupCount, legth): 
+          seed = int(time.time() * 10000000)
+          random.seed(seed)    
+          sliced_list = BallDataList[:i]
+          redTopKeys,blueTopKeys = Selenium_DoubleBall.Analyse(sliced_list)
+          AllDataList = Selenium_DoubleBall.DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,sliced_list,False,False)
+          nextData = BallDataList[i]
+          CulcStage(AllDataList,nextData.red,nextData.blue,redIndexCountMap,blueIndexCountMap)
 
 def Test(count,recommendCount,BallDataList):
 
@@ -32,7 +78,6 @@ def Test(count,recommendCount,BallDataList):
           sliced_list = BallDataList[:i]
           redTopKeys,blueTopKeys = Selenium_DoubleBall.Analyse(sliced_list)
           AllDataList = Selenium_DoubleBall.DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,sliced_list,False,False)
-   
           nextData = BallDataList[i]
           #print('nextID',nextData.ID)
           money = Selenium_Recommend_Analyse.Doit(AllDataList,nextData.red,[nextData.blue])
@@ -66,19 +111,31 @@ if __name__ == "__main__":
 
    
     #Test Recommend
-    recommendCount = 10
-    times = 100
-    G_exRed = 2
-    G_exBlue = 2 
+    recommendCount = 10000
+    times = 10
+    G_exRed = 0
+    G_exBlue = 0 
     G_GroupCount = 50
     G_cost = CulcComb(6+G_exRed,1+G_exBlue)*2
     allTotalMoney = 0
     alltotalCost = 0
+
+    redIndexCountMap =  defaultdict(int)
+    blueIndexCountMap =  defaultdict(int)
+    for i in range(times):
+       TextEx(recommendCount,BallDataList,redIndexCountMap,blueIndexCountMap)
+
+    redIndexCountMap = dict(sorted(redIndexCountMap.items(), key=lambda x: x[1], reverse=True))
+    blueIndexCountMap = dict(sorted(blueIndexCountMap.items(), key=lambda x: x[1], reverse=True))
+    for k,v in redIndexCountMap.items():
+        print(f'red index:{k},count:{v}')
+    for k,v in blueIndexCountMap.items():
+        print(f'blue index:{k},count:{v}')
     #seed = int(time.time() * 10000000)
     ##seed = 17339986740234198
     #random.seed(seed)
 
-
+    '''
     seedList = []
     #(7,1)=7, (8,1)=28, (8,2)=56 (8,3)=64
     i=100000000
@@ -100,6 +157,6 @@ if __name__ == "__main__":
     avgCost = alltotalCost / times / recommendCount / G_GroupCount
     avgWin = allTotalMoney / times / recommendCount / G_GroupCount
     print('loopTimes:',times,'avgCost:',avgCost,'avgWin:',avgWin)
-
+'''
     
      
