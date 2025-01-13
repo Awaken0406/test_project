@@ -14,7 +14,7 @@ import Selenium_Result_Update
 import Selenium_Recommend_Analyse
 import hashlib
 import string
-import V3.mysql_db as db
+#import V3.mysql_db as db
 
 
 
@@ -307,51 +307,69 @@ def DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,sliced_li
 
 
 if __name__ == "__main__":
-    
-    BallDataList = []
-    AllDataMap = Selenium_Result_Update.GetFileDate('2022-01-01')
-    for data in AllDataMap.values():
-         BallDataList.append(data)
-    redTopKeys,blueTopKeys = Analyse(BallDataList)
-    fileName = f'./OutPut/DoubleBall_senge.txt'
-    G_exRed = 0
-    G_exBlue = 0
-    recommendCount = 10000
-    IsString = True
+     
+     BallDataList = []
+     AllDataMap = Selenium_Result_Update.GetFileDate('2022-01-01')
+     for data in AllDataMap.values():
+          BallDataList.append(data)
+     redTopKeys,blueTopKeys = Analyse(BallDataList)
+     fileName = f'./OutPut/DoubleBall_senge.txt'
+     G_exRed = 0
+     G_exBlue = 0
+     recommendCount = 10
+     IsString = True
 
-    seed = int(time.time() * 10000000)
-    random.seed(seed)
-    AllDataList = DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,BallDataList,IsString,False,True)
+     seed = int(time.time() * 10000000)
+     random.seed(seed)
+     AllDataList = DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,BallDataList,IsString,False,True)
 
-    RedMap = defaultdict(int)
-    BlueMap = defaultdict(int)
-    for i in range(len(AllDataList)):
-         info  = AllDataList[i]
-         BlueMap[info.back[0]] += 1
-         for d in range(len(info.front)):
-              num = info.front[d]
-              RedMap[num] += 1
-    RedMap = dict(sorted(RedMap.items(), key=lambda x: x[1], reverse=True))
-    BlueMap = dict(sorted(BlueMap.items(), key=lambda x: x[1], reverse=True))
-    index = 0
-    for k,v in RedMap.items():
-        index+=1
-        print(f'red index:{index},number:{k},count:{v}')
-    index = 0
-    for k,v in BlueMap.items():
-        index+=1
-        print(f'blue index:{index},number:{k},count:{v}')
+     RedMap = defaultdict(int)
+     BlueMap = defaultdict(int)
+     for i in range(len(AllDataList)):
+          info  = AllDataList[i]
+          BlueMap[info.back[0]] += 1
+          for d in range(len(info.front)):
+               num = info.front[d]
+               RedMap[num] += 1
+     RedMap = dict(sorted(RedMap.items(), key=lambda x: x[1], reverse=True))
+     BlueMap = dict(sorted(BlueMap.items(), key=lambda x: x[1], reverse=True))
+     current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+     file = open(fileName, "a",encoding="utf-8") 
+     if(IsString == True):
+               file.write(f'random string:{current_time_str}\n')
+     else:
+               file.write(f'random number:{current_time_str}\n')
 
-    current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    file = open(fileName, "a",encoding="utf-8") 
-    if(IsString == True):
-          file.write(f'random string:{current_time_str}\n')
-    else:
-          file.write(f'random number:{current_time_str}\n')      
-    file.write(f"red:{RedMap}\n")
-    file.write(f"blue:{BlueMap}\n")
-    file.write("\n")
-    file.close()
+     index = 0
+     strinfo =''
+     print('Red')
+     file.write('Red:\n')
+     for k,v in RedMap.items():
+          index+=1
+          strinfo += f'index:{index},number:{k},count:{v}   '
+          if (index % 5) == 0 :
+                    print(strinfo)
+                    file.write(f'{strinfo}\n')
+                    strinfo = ''
+     print(strinfo)
+     file.write(f'{strinfo}\n')
+
+
+     index = 0
+     strinfo = ''
+     print('Blue')
+     file.write('Blue:\n')
+     for k,v in BlueMap.items():
+          index+=1
+          strinfo += f'index:{index},number:{k},count:{v}   '
+          if (index % 5) == 0 :
+                    print(strinfo)
+                    file.write(f'{strinfo}\n')
+                    strinfo = ''
+     print(strinfo)
+     file.write(f'{strinfo}\n')
+     file.write("\n")
+     file.close()
 
     
     
