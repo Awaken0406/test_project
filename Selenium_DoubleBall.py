@@ -182,14 +182,16 @@ def generate_md5_hashed_integer(maxValue):
     return int(value)
 
 
-def RecommendRed(redTopKeys,redFilterNumber,mustFilter, count, continuous):
+def RecommendRed(redTopKeys,redFilterNumber,mustFilter, count, continuous,IsString):
      recommend_red = []
      isContinuous = False
      while True:
                if(len(recommend_red) >= count):
                     break
-               #num = generate_md5_hashed_integer(34)
-               num = random.randint(1, 33)
+               if IsString == True:
+                    num = generate_md5_hashed_integer(34)
+               else:
+                    num = random.randint(1, 33)
                if num not in recommend_red:
                   if num not in mustFilter:
                     isOk = DoCombinationAnalyse(num,recommend_red)
@@ -223,7 +225,7 @@ def RecommendRed(redTopKeys,redFilterNumber,mustFilter, count, continuous):
 
      return recommend_red
 
-def DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,sliced_list,isPrint,isWrite):
+def DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,sliced_list,IsString,isPrint,isWrite):
      redFilterNumber = []
      blueFilterNumber = []
      filterCountTT = filterCount = 3
@@ -256,16 +258,18 @@ def DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,sliced_li
           recommend_red = []
           recommend_blue = []
           
-          redList = RecommendRed(redTopKeys,redFilterNumber,[],6,True)
+          redList = RecommendRed(redTopKeys,redFilterNumber,[],6,True,IsString)
           #额外
-          redEx = RecommendRed(redTopKeys , redFilterNumber,redList,G_exRed,False)
+          redEx = RecommendRed(redTopKeys , redFilterNumber,redList,G_exRed,False,IsString)
           recommend_red = redList + redEx
           
           while True: 
                if(len(recommend_blue) == 1 + G_exBlue):
                          break
-               #num = generate_md5_hashed_integer(17)
-               num = random.randint(1, 16)
+               if IsString == True:
+                    num = generate_md5_hashed_integer(17)
+               else:
+                    num = random.randint(1, 16)
                if num not in recommend_blue:
                     if num in blueTopKeys:
                          recommend_blue.append(num)
@@ -305,7 +309,7 @@ def DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,sliced_li
 if __name__ == "__main__":
     
     BallDataList = []
-    AllDataMap = Selenium_Result_Update.GetFileDate('2023-01-01')
+    AllDataMap = Selenium_Result_Update.GetFileDate('2022-01-01')
     for data in AllDataMap.values():
          BallDataList.append(data)
     redTopKeys,blueTopKeys = Analyse(BallDataList)
@@ -313,9 +317,11 @@ if __name__ == "__main__":
     G_exRed = 0
     G_exBlue = 0
     recommendCount = 10000
+    IsString = True
+
     seed = int(time.time() * 10000000)
     random.seed(seed)
-    AllDataList = DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,BallDataList,True,True)
+    AllDataList = DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,BallDataList,IsString,False,True)
 
     RedMap = defaultdict(int)
     BlueMap = defaultdict(int)
@@ -327,12 +333,26 @@ if __name__ == "__main__":
               RedMap[num] += 1
     RedMap = dict(sorted(RedMap.items(), key=lambda x: x[1], reverse=True))
     BlueMap = dict(sorted(BlueMap.items(), key=lambda x: x[1], reverse=True))
-    print("RedMap:") 
-    for k,count in RedMap.items():
-          print(k,count)   
-    print("BlueMap:") 
-    for k,count in BlueMap.items():
-       print(k,count)  
+    index = 0
+    for k,v in RedMap.items():
+        index+=1
+        print(f'red index:{index},number:{k},count:{v}')
+    index = 0
+    for k,v in BlueMap.items():
+        index+=1
+        print(f'blue index:{index},number:{k},count:{v}')
+
+    current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    file = open(fileName, "a",encoding="utf-8") 
+    if(IsString == True):
+          file.write(f'random string:{current_time_str}\n')
+    else:
+          file.write(f'random number:{current_time_str}\n')      
+    file.write(f"red:{RedMap}\n")
+    file.write(f"blue:{BlueMap}\n")
+    file.write("\n")
+    file.close()
+
     
     
      
