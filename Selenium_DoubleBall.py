@@ -14,7 +14,7 @@ import Selenium_Result_Update
 import Selenium_Recommend_Analyse
 import hashlib
 import string
-#import V3.mysql_db as db
+import V3.mysql_db as db
 
 
 
@@ -316,8 +316,8 @@ if __name__ == "__main__":
      fileName = f'./OutPut/DoubleBall_senge.txt'
      G_exRed = 0
      G_exBlue = 0
-     recommendCount = 10
-     IsString = True
+     recommendCount = 10000
+     IsString = False
 
      seed = int(time.time() * 10000000)
      random.seed(seed)
@@ -371,6 +371,14 @@ if __name__ == "__main__":
      file.write("\n")
      file.close()
 
-    
-    
-     
+
+     redStringList = [27,17,15,28,13,6,20]
+     blueStringList = [15,9]
+     redNumberList = [15,12,26,8,21,5,14]
+     blueNumberList = [15,6]
+     if(IsString == True):
+          redList = redStringList
+          blueList = blueStringList
+     else:
+          redList = redNumberList
+          blueList = blueNumberList
