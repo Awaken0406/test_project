@@ -14,7 +14,7 @@ import Selenium_Result_Update
 import Selenium_Recommend_Analyse
 import hashlib
 import string
-import V3.mysql_db as db
+#import V3.mysql_db as db
 
 
 
@@ -306,39 +306,28 @@ def DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,sliced_li
 
 
 
-if __name__ == "__main__":
-     
-     BallDataList = []
-     AllDataMap = Selenium_Result_Update.GetFileDate('2022-01-01')
-     for data in AllDataMap.values():
-          BallDataList.append(data)
-     redTopKeys,blueTopKeys = Analyse(BallDataList)
-     fileName = f'./OutPut/DoubleBall_senge.txt'
-     G_exRed = 0
-     G_exBlue = 0
-     recommendCount = 10000
-     IsString = False
-
-     seed = int(time.time() * 10000000)
-     random.seed(seed)
-     AllDataList = DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,BallDataList,IsString,False,True)
-
+def Doit():
      RedMap = defaultdict(int)
      BlueMap = defaultdict(int)
-     for i in range(len(AllDataList)):
-          info  = AllDataList[i]
-          BlueMap[info.back[0]] += 1
-          for d in range(len(info.front)):
-               num = info.front[d]
-               RedMap[num] += 1
+     for t in range(loopTimes):
+          seed = int(time.time() * 10000000)
+          random.seed(seed)
+          AllDataList = DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,BallDataList,IsString,False,False)
+          for i in range(len(AllDataList)):
+               info  = AllDataList[i]
+               BlueMap[info.back[0]] += 1
+               for d in range(len(info.front)):
+                    num = info.front[d]
+                    RedMap[num] += 1
+
      RedMap = dict(sorted(RedMap.items(), key=lambda x: x[1], reverse=True))
      BlueMap = dict(sorted(BlueMap.items(), key=lambda x: x[1], reverse=True))
      current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
      file = open(fileName, "a",encoding="utf-8") 
      if(IsString == True):
-               file.write(f'random string:{current_time_str}\n')
+               file.write(f'random string:{current_time_str},IsString:{IsString},loopTimes:{loopTimes},recommendCount:{recommendCount}\n')
      else:
-               file.write(f'random number:{current_time_str}\n')
+               file.write(f'random number:{current_time_str},IsString:{IsString},loopTimes:{loopTimes},recommendCount:{recommendCount}\n')
 
      index = 0
      strinfo =''
@@ -369,16 +358,89 @@ if __name__ == "__main__":
      print(strinfo)
      file.write(f'{strinfo}\n')
      file.write("\n")
-     file.close()
-
-
-     redStringList = [27,17,15,28,13,6,20]
-     blueStringList = [15,9]
-     redNumberList = [15,12,26,8,21,5,14]
-     blueNumberList = [15,6]
+    
+     print('筛选:')
+     file.write("筛选:\n")
      if(IsString == True):
           redList = redStringList
           blueList = blueStringList
      else:
           redList = redNumberList
           blueList = blueNumberList
+
+     outRed = []
+     outBlue =[]
+     index =0
+     strinfo = ''
+     for k,v in RedMap.items():
+          index += 1
+          if index in redList:
+                    strinfo = f'red index:{index},number:{k}  '
+                    print(strinfo)
+                    file.write(f'{strinfo}\n')
+                    outRed.append(k)
+     index =0
+     strinfo = ''
+     for k,v in BlueMap.items():
+          index += 1
+          if index in blueList:
+                    strinfo = f'blue index:{index},number:{k}  '
+                    print(strinfo)
+                    file.write(f'{strinfo}\n')
+                    outBlue.append(k)
+     file.close()
+     return outRed,outBlue
+
+if __name__ == "__main__":
+     
+     BallDataList = []
+     AllDataMap = Selenium_Result_Update.GetFileDate('2022-01-01')
+     for data in AllDataMap.values():
+          BallDataList.append(data)
+     redTopKeys,blueTopKeys = Analyse(BallDataList)
+     fileName = f'./OutPut/DoubleBall_senge.txt'
+     G_exRed = 0
+     G_exBlue = 0
+     recommendCount = 1000
+     IsString = True
+     loopTimes = 10
+     redStringList = [27,17,15,28,13,6,20]
+     blueStringList = [15,9]
+     redNumberList = [15,12,26,8,21,5,14]
+     blueNumberList = [15,6]
+
+     SelectCount = 100
+     RMap = defaultdict(int)
+     BMap = defaultdict(int)
+     for i in range(SelectCount):
+          outRed,outBlue = Doit()
+          for v in outRed:
+               RMap[v] += 1
+          for v in outBlue:
+               BMap[v] += 1
+
+     RMap = dict(sorted(RMap.items(), key=lambda x: x[1], reverse=True))
+     BMap = dict(sorted(BMap.items(), key=lambda x: x[1], reverse=True))
+
+     file = open(fileName, "a",encoding="utf-8")
+     print(f'疯狂压缩:')
+     file.write(f'疯狂压缩:\n')
+     index =0
+     for k,v in RMap.items():
+          index += 1
+          if(index > 7):
+               break
+          print(f'{k},',end='')
+          file.write(f'{k},')
+
+     print(f'  --  ',end='')
+     file.write(f'  --  ')
+     index = 0
+     for k,v in BMap.items():
+          index += 1
+          if(index > 2):
+               break
+          print(f'{k},',end='')
+          file.write(f'{k},')
+     print(f'\n',end='')
+     file.close()
