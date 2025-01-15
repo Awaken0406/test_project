@@ -306,7 +306,7 @@ def DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,sliced_li
 
 
 
-def Doit():
+def Doit(fileName):
      RedMap = defaultdict(int)
      BlueMap = defaultdict(int)
      for t in range(loopTimes):
@@ -391,29 +391,15 @@ def Doit():
      file.close()
      return outRed,outBlue
 
-if __name__ == "__main__":
-     
-     BallDataList = []
-     AllDataMap = Selenium_Result_Update.GetFileDate('2022-01-01')
-     for data in AllDataMap.values():
-          BallDataList.append(data)
-     redTopKeys,blueTopKeys = Analyse(BallDataList)
-     fileName = f'./OutPut/DoubleBall_senge.txt'
-     G_exRed = 0
-     G_exBlue = 0
-     recommendCount = 1000
-     IsString = True
-     loopTimes = 10
-     redStringList = [27,17,15,28,13,6,20]
-     blueStringList = [15,9]
-     redNumberList = [15,12,26,8,21,5,14]
-     blueNumberList = [15,6]
 
+
+def CrazyCompression():
+     fileName = f'./OutPut/CrazyCompression.txt'
      SelectCount = 100
      RMap = defaultdict(int)
      BMap = defaultdict(int)
      for i in range(SelectCount):
-          outRed,outBlue = Doit()
+          outRed,outBlue = Doit(fileName)
           for v in outRed:
                RMap[v] += 1
           for v in outBlue:
@@ -444,3 +430,25 @@ if __name__ == "__main__":
           file.write(f'{k},')
      print(f'\n',end='')
      file.close()
+
+
+
+if __name__ == "__main__":
+     
+     BallDataList = []
+     AllDataMap = Selenium_Result_Update.GetFileDate('2022-01-01')
+     for data in AllDataMap.values():
+          BallDataList.append(data)
+     redTopKeys,blueTopKeys = Analyse(BallDataList)
+
+     G_exRed = 0
+     G_exBlue = 0
+     recommendCount = 10000   #默认10000
+     IsString = True          #默认True
+     loopTimes = 1            #默认1
+     redStringList = [27,17,15,28,13,6,20]
+     blueStringList = [15,9]
+     redNumberList = [15,12,26,8,21,5,14]
+     blueNumberList = [15,6]
+     name = f'./OutPut/DoubleBall_senge.txt'
+     Doit(name)
