@@ -432,6 +432,8 @@ def Doit(fileName):
                     outRed.append(k)
      index =0
      strinfo = ''
+     print('-----------------------')
+     file.write(f'-----------------------\n')
      for k,v in BlueMap.items():
           index += 1
           if index in blueList:
@@ -439,6 +441,9 @@ def Doit(fileName):
                     print(strinfo)
                     file.write(f'{strinfo}\n')
                     outBlue.append(k)
+     print('-----------------------')
+     file.write(f'-----------------------\n')
+     file.write(f'\n')
      file.close()
      return outRed,outBlue
 
@@ -533,7 +538,10 @@ def DoitPass(sliced_list):
           blueList += data.back
      redList = list(set(redList))
      blueList = list(set(blueList))
-     print(f'red{redList},blue:{blueList}')
+     print(f'pass red{redList},blue:{blueList}')
+     print('-----------------------')
+
+
 if __name__ == "__main__":
      
      BallDataList = []
@@ -545,13 +553,15 @@ if __name__ == "__main__":
      G_exRed = 0
      G_exBlue = 0
      recommendCount = 10000   #默认10000
-     IsString = True          #默认True
-     loopTimes = 10            #默认1
-     redStringList = [27,17,15,28,13,6]
+     IsString = False          #默认True
+     loopTimes = 1            #默认1
+     redStringList = [27,17,15,28,13,6,20,23,22,8,24,1,25,12,7]
      blueStringList = [15,9,10,5]
-     redNumberList = [15,12,26,8,21,5,14]
-     blueNumberList = [15,6]
-     name = f'./OutPut/DoubleBall_senge.txt'
-     #DoitPass(BallDataList)
-     #Doit(name)
-     RunExcludeModel(BallDataList)
+     redNumberList = [15,12,26,8,21,5,14,23,6,30,17,18,19,24,13]
+     blueNumberList = [15,6,13,7]
+
+
+     name = f'./OutPut/DoubleBall_Recommend_Log.txt'
+     Doit(name)
+     DoitPass(BallDataList)
+     #RunExcludeModel(BallDataList)
