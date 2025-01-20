@@ -501,7 +501,6 @@ def RunExcludeModel(BallDataList):
      legth = len(BallDataList)
      loopTimes = 10
      G_GroupCount = 100
-     recommendCount = 3
      for loop in range(loopTimes): 
           for i in range(legth - G_GroupCount, legth): 
                #RMap.clear()
@@ -511,7 +510,7 @@ def RunExcludeModel(BallDataList):
                random.seed(seed)    
                sliced_list = BallDataList[:i]
                redTopKeys,blueTopKeys = Analyse(sliced_list)
-               AllDataList = DoRecommendPass(recommendCount,redTopKeys,sliced_list)
+               AllDataList = DoRecommendPass(PassRecommendCount,redTopKeys,sliced_list)
           
                Selenium_Recommend_Analyse.AnalyseFile(AllDataList,nextData.red,[nextData.blue])
                for data in AllDataList:
@@ -522,15 +521,14 @@ def RunExcludeModel(BallDataList):
      sorted_RMap = OrderedDict()
      for key in sorted_keys:
                value = RMap[key]
-               percent = (value/(recommendCount * G_GroupCount * loopTimes)) * 100
+               percent = (value/(PassRecommendCount * G_GroupCount * loopTimes)) * 100
                sorted_RMap[key] = RMap[key]
                print(f'hitCount:--{key},times:{value},percent:{percent}%')
      #print(sorted_RMap)
 
 
 def DoitPass(sliced_list): 
-     recommendCount = 2  
-     AllDataList = DoRecommendPass(recommendCount,redTopKeys,sliced_list)
+     AllDataList = DoRecommendPass(PassRecommendCount,redTopKeys,sliced_list)
      redList = []
      blueList = []
      for data in AllDataList:
@@ -560,8 +558,8 @@ if __name__ == "__main__":
      redNumberList = [15,12,26,8,21,5,14,23,6,30,17,18,19,24,13]
      blueNumberList = [15,6,13,7]
 
-
+     PassRecommendCount = 2
      name = f'./OutPut/DoubleBall_Recommend_Log.txt'
-     Doit(name)
-     DoitPass(BallDataList)
-     #RunExcludeModel(BallDataList)
+     #Doit(name)
+     #DoitPass(BallDataList) #just once
+     RunExcludeModel(BallDataList)
