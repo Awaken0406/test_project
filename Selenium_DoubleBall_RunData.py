@@ -113,8 +113,8 @@ if __name__ == "__main__":
     #Test Recommend
     recommendCount = 10000
     times = 10
-    G_exRed = 0
-    G_exBlue = 2
+    G_exRed = 1
+    G_exBlue = 1
     G_GroupCount = 100
     G_cost = CulcComb(6+G_exRed,1+G_exBlue)*2
     allTotalMoney = 0
