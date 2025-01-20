@@ -60,7 +60,7 @@ def TextEx(recommendCount,BallDataList,redIndexCountMap,blueIndexCountMap):
           random.seed(seed)    
           sliced_list = BallDataList[:i]
           redTopKeys,blueTopKeys = Selenium_DoubleBall.Analyse(sliced_list)
-          AllDataList = Selenium_DoubleBall.DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,sliced_list,False,False)
+          AllDataList = Selenium_DoubleBall.DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,sliced_list,IsString,False,False)
           nextData = BallDataList[i]
           CulcStage(AllDataList,nextData.red,nextData.blue,redIndexCountMap,blueIndexCountMap)
 
@@ -114,23 +114,56 @@ if __name__ == "__main__":
     recommendCount = 10000
     times = 10
     G_exRed = 0
-    G_exBlue = 0 
-    G_GroupCount = 50
+    G_exBlue = 2
+    G_GroupCount = 100
     G_cost = CulcComb(6+G_exRed,1+G_exBlue)*2
     allTotalMoney = 0
     alltotalCost = 0
+    IsString = True
 
     redIndexCountMap =  defaultdict(int)
     blueIndexCountMap =  defaultdict(int)
     for i in range(times):
        TextEx(recommendCount,BallDataList,redIndexCountMap,blueIndexCountMap)
+       print('loop times:',i+1)
 
     redIndexCountMap = dict(sorted(redIndexCountMap.items(), key=lambda x: x[1], reverse=True))
     blueIndexCountMap = dict(sorted(blueIndexCountMap.items(), key=lambda x: x[1], reverse=True))
+    file = open('./OutPut/RunData.txt', "a",encoding="utf-8") 
+    current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    if(IsString == True):
+               file.write(f'random string:{current_time_str}\n')
+    else:
+               file.write(f'random number:{current_time_str}\n')
+    index = 0
+    strinfo =''
     for k,v in redIndexCountMap.items():
-        print(f'red index:{k},count:{v}')
+          index+=1
+          strinfo += f'red index:{index},number:{k},count:{v}   '
+          if (index % 5) == 0 :
+                    print(strinfo)
+                    file.write(f'{strinfo}\n')
+                    strinfo = ''
+    print(strinfo)
+    file.write(f'{strinfo}\n')
+    file.write('\n')
+    index = 0
+    strinfo = ''
     for k,v in blueIndexCountMap.items():
-        print(f'blue index:{k},count:{v}')
+          index+=1
+          strinfo += f'blue index:{index},number:{k},count:{v}   '
+          if (index % 5) == 0 :
+                    print(strinfo)
+                    file.write(f'{strinfo}\n')
+                    strinfo = ''
+    print(strinfo)
+    file.write(f'{strinfo}\n')
+    file.write("\n")
+    file.close()
+
+
+
+
     #seed = int(time.time() * 10000000)
     ##seed = 17339986740234198
     #random.seed(seed)
