@@ -14,6 +14,7 @@ import Selenium_Result_Update
 import Selenium_Recommend_Analyse
 import hashlib
 import string
+from collections import defaultdict, OrderedDict
 #import V3.mysql_db as db
 
 
@@ -228,9 +229,7 @@ def RecommendRed(redTopKeys,redFilterNumber,mustFilter, count, continuous,IsStri
 def DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,sliced_list,IsString,isPrint,isWrite):
      redFilterNumber = []
      blueFilterNumber = []
-     filterCountTT = filterCount = 3
- 
-
+     filterCount = 3
      for ball in reversed(sliced_list):    
           if filterCount == 0:
                break
@@ -304,7 +303,59 @@ def DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,sliced_li
           file.close()'''
      return AllDataList
 
+#随意的
+def DoRecommendPass(recommendCount,redTopKeys,sliced_list):
+     redFilterNumber = []
+     blueFilterNumber = []
+     filterCount = 3
+     for ball in reversed(sliced_list):    
+          if filterCount == 0:
+               break
+          filterCount -= 1
+          redFilterNumber += ball.red
 
+     bluefilterCount = 3#最近3期
+     for ball in reversed(sliced_list):    
+          if bluefilterCount == 0:
+               break
+          bluefilterCount -= 1
+          blueFilterNumber.append(ball.blue)
+     redFilterNumber = list(set(redFilterNumber))
+     blueFilterNumber = list(set(blueFilterNumber))
+
+     AllDataList = []
+     for i in range(recommendCount):
+          recommend_red = []
+          recommend_blue = []
+
+          while(True):
+                if len(recommend_red) >= 6:
+                      break          
+                number = random.randint(1, 33)
+                if number not in redTopKeys and  number in redFilterNumber :
+                    recommend_red.append(number)
+                else:
+                      r = random.randint(1, 2)
+                      if r == 2:
+                         recommend_red.append(number)
+          while(True):
+                    buleNumber = random.randint(1, 16)
+                    if number in blueFilterNumber:             
+                         recommend_blue.append(buleNumber)
+                         break
+                    else:
+                         r = random.randint(1, 2)
+                         if r == 2:
+                              recommend_blue.append(number)
+                              break
+          
+          recommend_red.sort()
+          dd = Selenium_Recommend_Analyse.DataList()
+          dd.front = recommend_red
+          dd.back = recommend_blue
+          AllDataList.append(dd)
+
+     return AllDataList
 
 def Doit(fileName):
      RedMap = defaultdict(int)
@@ -429,10 +480,60 @@ def CrazyCompression():
           print(f'{k},',end='')
           file.write(f'{k},')
      print(f'\n',end='')
+     file.write(f'\n')
      file.close()
 
 
+def GetRandomTimestamp(date_string):
+     #date_string = '2022-01-01'
+     timestamp = datetime.strptime(date_string, '%Y-%m-%d').timestamp()
+     rand = random.randint(43200, 86400)
+     return timestamp + rand
+   
+#排除法模型
+def RunExcludeModel(BallDataList):
+     RMap = defaultdict(int)
+     legth = len(BallDataList)
+     loopTimes = 10
+     G_GroupCount = 100
+     recommendCount = 3
+     for loop in range(loopTimes): 
+          for i in range(legth - G_GroupCount, legth): 
+               #RMap.clear()
+               nextData = BallDataList[i]
+               Timestamp = GetRandomTimestamp(nextData.date) - 86400
+               seed = int(Timestamp * 10000000)
+               random.seed(seed)    
+               sliced_list = BallDataList[:i]
+               redTopKeys,blueTopKeys = Analyse(sliced_list)
+               AllDataList = DoRecommendPass(recommendCount,redTopKeys,sliced_list)
+          
+               Selenium_Recommend_Analyse.AnalyseFile(AllDataList,nextData.red,[nextData.blue])
+               for data in AllDataList:
+                    num = data.front_hit_count + data.back_hit_count
+                    RMap[num] += 1
 
+     sorted_keys = sorted(RMap.keys(), key=lambda x: x, reverse=True)
+     sorted_RMap = OrderedDict()
+     for key in sorted_keys:
+               value = RMap[key]
+               percent = (value/(recommendCount * G_GroupCount * loopTimes)) * 100
+               sorted_RMap[key] = RMap[key]
+               print(f'hitCount:--{key},times:{value},percent:{percent}%')
+     #print(sorted_RMap)
+
+
+def DoitPass(sliced_list): 
+     recommendCount = 2  
+     AllDataList = DoRecommendPass(recommendCount,redTopKeys,sliced_list)
+     redList = []
+     blueList = []
+     for data in AllDataList:
+          redList += data.front
+          blueList += data.back
+     redList = list(set(redList))
+     blueList = list(set(blueList))
+     print(f'red{redList},blue:{blueList}')
 if __name__ == "__main__":
      
      BallDataList = []
@@ -445,10 +546,12 @@ if __name__ == "__main__":
      G_exBlue = 0
      recommendCount = 10000   #默认10000
      IsString = True          #默认True
-     loopTimes = 1            #默认1
-     redStringList = [27,17,15,28,13,6,20]
-     blueStringList = [15,9]
+     loopTimes = 10            #默认1
+     redStringList = [27,17,15,28,13,6]
+     blueStringList = [15,9,10,5]
      redNumberList = [15,12,26,8,21,5,14]
      blueNumberList = [15,6]
      name = f'./OutPut/DoubleBall_senge.txt'
-     Doit(name)
+     #DoitPass(BallDataList)
+     #Doit(name)
+     RunExcludeModel(BallDataList)
