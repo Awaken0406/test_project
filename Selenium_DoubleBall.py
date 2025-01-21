@@ -340,13 +340,13 @@ def DoRecommendPass(recommendCount,redTopKeys,sliced_list):
                          recommend_red.append(number)
           while(True):
                     buleNumber = random.randint(1, 16)
-                    if number in blueFilterNumber:             
+                    if buleNumber in blueFilterNumber:             
                          recommend_blue.append(buleNumber)
                          break
                     else:
                          r = random.randint(1, 2)
                          if r == 2:
-                              recommend_blue.append(number)
+                              recommend_blue.append(buleNumber)
                               break
           
           recommend_red.sort()
@@ -555,11 +555,15 @@ if __name__ == "__main__":
      loopTimes = 1            #默认1
      redStringList = [27,17,15,28,13,6,20,23,22,8,24,1,25,12,7]
      blueStringList = [15,9,10,5]
-     redNumberList = [15,12,26,8,21,5,14,23,6,30,17,18,19,24,13]
-     blueNumberList = [15,6,13,7]
+     #redNumberList = [15,12,26,8,21,5,14,23,6,30,17,18,19,24,13]
+     #blueNumberList = [15,6,13,7]
+     #new
+     redNumberList = [20,2,26,28,19,22,12,8,17,25,21,11,29,10,13]
+     blueNumberList = [3,8,15,11]
 
      PassRecommendCount = 2
      name = f'./OutPut/DoubleBall_Recommend_Log.txt'
      #Doit(name)
-     #DoitPass(BallDataList) #just once
-     RunExcludeModel(BallDataList)
+     DoitPass(BallDataList) #just once
+     #RunExcludeModel(BallDataList)
+     #pass red[32, 1, 7, 9, 12, 17, 18, 24, 29],blue:[17, 7]
