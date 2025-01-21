@@ -1,13 +1,13 @@
-random number:2025-01-21 15:32:43
-red index:1,number:15,count:211   red index:2,number:20,count:208   red index:3,number:26,count:203   red index:4,number:22,count:202   red index:5,number:28,count:201   
-red index:6,number:17,count:200   red index:7,number:25,count:197   red index:8,number:19,count:194   red index:9,number:21,count:191   red index:10,number:23,count:189   
-red index:11,number:2,count:188   red index:12,number:1,count:187   red index:13,number:3,count:185   red index:14,number:16,count:183   red index:15,number:6,count:182   
-red index:16,number:29,count:181   red index:17,number:10,count:181   red index:18,number:18,count:180   red index:19,number:5,count:179   red index:20,number:12,count:179   
-red index:21,number:27,count:179   red index:22,number:11,count:179   red index:23,number:4,count:178   red index:24,number:24,count:176   red index:25,number:13,count:175   
-red index:26,number:30,count:174   red index:27,number:14,count:174   red index:28,number:8,count:171   red index:29,number:7,count:164   red index:30,number:9,count:162   
-red index:31,number:31,count:152   red index:32,number:32,count:148   red index:33,number:33,count:147   
+random number:2025-01-21 16:13:08
+red index:20,count:210   red index:2,count:208   red index:26,count:207   red index:28,count:205   red index:19,count:205   
+red index:22,count:204   red index:12,count:199   red index:8,count:198   red index:17,count:195   red index:25,count:195   
+red index:21,count:194   red index:11,count:192   red index:29,count:190   red index:10,count:187   red index:13,count:185   
+red index:15,count:182   red index:27,count:181   red index:24,count:179   red index:23,count:179   red index:18,count:179   
+red index:9,count:176   red index:30,count:175   red index:5,count:173   red index:4,count:172   red index:7,count:170   
+red index:14,count:166   red index:6,count:164   red index:3,count:163   red index:1,count:162   red index:16,count:161   
+red index:33,count:153   red index:31,count:149   red index:32,count:142   
 
-blue index:1,number:15,count:80   blue index:2,number:14,count:73   blue index:3,number:4,count:70   blue index:4,number:7,count:69   blue index:5,number:5,count:69   
-blue index:6,number:6,count:61   blue index:7,number:9,count:59   blue index:8,number:13,count:59   blue index:9,number:1,count:59   blue index:10,number:10,count:58   
-blue index:11,number:8,count:58   blue index:12,number:12,count:58   blue index:13,number:3,count:57   blue index:14,number:16,count:57   blue index:15,number:2,count:57   
-blue index:16,number:11,count:56   
+blue index:3,count:76   blue index:8,count:73   blue index:15,count:73   blue index:11,count:70   blue index:12,count:68   
+blue index:4,count:65   blue index:14,count:65   blue index:9,count:64   blue index:1,count:64   blue index:2,count:62   
+blue index:7,count:56   blue index:10,count:56   blue index:16,count:55   blue index:5,count:54   blue index:6,count:50   
+blue index:13,count:49   
