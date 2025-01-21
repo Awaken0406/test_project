@@ -113,7 +113,7 @@ if __name__ == "__main__":
     G_cost = CulcComb(6+G_exRed,1+G_exBlue)*2
     allTotalMoney = 0
     alltotalCost = 0
-    IsString = False
+    IsString = True
 
     redIndexCountMap =  defaultdict(int)
     blueIndexCountMap =  defaultdict(int)
