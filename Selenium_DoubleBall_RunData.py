@@ -30,14 +30,12 @@ def CulcStage(AllDataList,red,blue,redIndexCountMap,blueIndexCountMap):
     BlueMap = dict(sorted(BlueMap.items(), key=lambda x: x[1], reverse=True))
     #print(f"RedSize:{len(RedMap)},RedMap:{RedMap}") 
     #print(f"BlueSize:{len(BlueMap)},BlueMap:{BlueMap}")
-    redIndexMap =  defaultdict(int)
 
     for r in  red:
         index = 0
         for k,v in RedMap.items():
             index+=1
             if(k==r):
-                redIndexMap[r] = index
                 redIndexCountMap[index] += 1
                 break
 
@@ -48,21 +46,17 @@ def CulcStage(AllDataList,red,blue,redIndexCountMap,blueIndexCountMap):
             blueIndexCountMap[bindex] += 1
             break
 
-    #for k,v in redIndexMap.items():
-    #    print(f'num:{k},index:{v}')
-
-
 
 def TextEx(recommendCount,BallDataList,redIndexCountMap,blueIndexCountMap):
     legth = len(BallDataList)
     for i in range(legth - G_GroupCount, legth): 
-          seed = int(time.time() * 10000000)
-          random.seed(seed)    
-          sliced_list = BallDataList[:i]
-          redTopKeys,blueTopKeys = Selenium_DoubleBall.Analyse(sliced_list)
-          AllDataList = Selenium_DoubleBall.DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,sliced_list,IsString,False,False)
-          nextData = BallDataList[i]
-          CulcStage(AllDataList,nextData.red,nextData.blue,redIndexCountMap,blueIndexCountMap)
+            nextData = BallDataList[i]
+            Timestamp = Selenium_DoubleBall.GetRandomTimestamp(nextData.date) - 86400
+            seed = int(Timestamp * 10000000) 
+            sliced_list = BallDataList[:i]
+            redTopKeys,blueTopKeys = Selenium_DoubleBall.Analyse(sliced_list)
+            AllDataList = Selenium_DoubleBall.DoRecommend(redTopKeys,blueTopKeys,G_exRed,G_exBlue,recommendCount,sliced_list,IsString,False,False)
+            CulcStage(AllDataList,nextData.red,nextData.blue,redIndexCountMap,blueIndexCountMap)
 
 def Test(count,recommendCount,BallDataList):
 
@@ -113,13 +107,13 @@ if __name__ == "__main__":
     #Test Recommend
     recommendCount = 10000
     times = 10
-    G_exRed = 1
-    G_exBlue = 1
+    G_exRed = 0
+    G_exBlue = 0
     G_GroupCount = 100
     G_cost = CulcComb(6+G_exRed,1+G_exBlue)*2
     allTotalMoney = 0
     alltotalCost = 0
-    IsString = True
+    IsString = False
 
     redIndexCountMap =  defaultdict(int)
     blueIndexCountMap =  defaultdict(int)
@@ -139,7 +133,7 @@ if __name__ == "__main__":
     strinfo =''
     for k,v in redIndexCountMap.items():
           index+=1
-          strinfo += f'red index:{index},number:{k},count:{v}   '
+          strinfo += f'red index:{k},count:{v}   '
           if (index % 5) == 0 :
                     print(strinfo)
                     file.write(f'{strinfo}\n')
@@ -151,7 +145,7 @@ if __name__ == "__main__":
     strinfo = ''
     for k,v in blueIndexCountMap.items():
           index+=1
-          strinfo += f'blue index:{index},number:{k},count:{v}   '
+          strinfo += f'blue index:{k},count:{v}   '
           if (index % 5) == 0 :
                     print(strinfo)
                     file.write(f'{strinfo}\n')
