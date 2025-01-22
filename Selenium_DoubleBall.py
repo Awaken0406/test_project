@@ -376,13 +376,17 @@ def Doit(fileName):
      current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
      file = open(fileName, "a",encoding="utf-8") 
      if(IsString == True):
-               file.write(f'random string:{current_time_str},IsString:{IsString},loopTimes:{loopTimes},recommendCount:{recommendCount}\n')
+               info = f'random string:{current_time_str},IsString:{IsString},loopTimes:{loopTimes},recommendCount:{recommendCount}\n'
+               file.write(info)
+               print(info,end='')
      else:
-               file.write(f'random number:{current_time_str},IsString:{IsString},loopTimes:{loopTimes},recommendCount:{recommendCount}\n')
+               info = f'random number:{current_time_str},IsString:{IsString},loopTimes:{loopTimes},recommendCount:{recommendCount}\n'
+               file.write(info)
+               print(info,end='')
 
      index = 0
      strinfo =''
-     print('Red')
+     print('Red:')
      file.write('Red:\n')
      for k,v in RedMap.items():
           index+=1
@@ -397,7 +401,7 @@ def Doit(fileName):
 
      index = 0
      strinfo = ''
-     print('Blue')
+     print('Blue:')
      file.write('Blue:\n')
      for k,v in BlueMap.items():
           index+=1
@@ -421,30 +425,42 @@ def Doit(fileName):
 
      outRed = []
      outBlue =[]
-     index =0
-     strinfo = ''
-     for k,v in RedMap.items():
-          index += 1
-          if index in redList:
-                    strinfo = f'red index:{index},number:{k}  '
-                    print(strinfo)
-                    file.write(f'{strinfo}\n')
-                    outRed.append(k)
-     index =0
-     strinfo = ''
+     for idIndex in redList:
+          index =0
+          strinfo = ''
+          for k,v in RedMap.items():
+               index += 1
+               if index == idIndex:
+                         strinfo = f'red index:{index},number:{k}  '
+                         print(strinfo)
+                         file.write(f'{strinfo}\n')
+                         outRed.append(k)
+               
+
      print('-----------------------')
      file.write(f'-----------------------\n')
-     for k,v in BlueMap.items():
-          index += 1
-          if index in blueList:
-                    strinfo = f'blue index:{index},number:{k}  '
-                    print(strinfo)
-                    file.write(f'{strinfo}\n')
-                    outBlue.append(k)
+     for idIndex in blueList:
+          index =0
+          strinfo = ''
+          for k,v in BlueMap.items():
+               index += 1
+               if index == idIndex:
+                         strinfo = f'blue index:{index},number:{k}  '
+                         print(strinfo)
+                         file.write(f'{strinfo}\n')
+                         outBlue.append(k)
+
+     outRed = list(set(outRed))
+     outBlue = list(set(outBlue))
      print('-----------------------')
+     file.write(f'-----------------------\n')
+     print(f'Result:{outRed}--{outBlue}')
+     print('-----------------------')
+     file.write(f'Result:{outRed}--{outBlue}')
      file.write(f'-----------------------\n')
      file.write(f'\n')
      file.close()
+
      return outRed,outBlue
 
 
@@ -514,7 +530,7 @@ def RunExcludeModel(BallDataList):
           
                Selenium_Recommend_Analyse.AnalyseFile(AllDataList,nextData.red,[nextData.blue])
                for data in AllDataList:
-                    num = data.front_hit_count + data.back_hit_count
+                    num = data.front_hit_count #+ data.back_hit_count
                     RMap[num] += 1
 
      sorted_keys = sorted(RMap.keys(), key=lambda x: x, reverse=True)
@@ -553,17 +569,14 @@ if __name__ == "__main__":
      recommendCount = 10000   #默认10000
      IsString = False          #默认True
      loopTimes = 1            #默认1
-     redStringList = [27,17,15,28,13,6,20,23,22,8,24,1,25,12,7]
-     blueStringList = [15,9,10,5]
-     #redNumberList = [15,12,26,8,21,5,14,23,6,30,17,18,19,24,13]
-     #blueNumberList = [15,6,13,7]
-     #new
-     redNumberList = [20,2,26,28,19,22,12,8,17,25,21,11,29,10,13]
-     blueNumberList = [3,8,15,11]
+     redStringList = [25,16,28,19,18,27,9]
+     blueStringList = [15,9]
 
-     PassRecommendCount = 2
+     redNumberList = [20,2,26,28,19,22,12]
+     blueNumberList = [3,8]
+
+     PassRecommendCount = 1
      name = f'./OutPut/DoubleBall_Recommend_Log.txt'
-     #Doit(name)
-     DoitPass(BallDataList) #just once
+     Doit(name)
+     #DoitPass(BallDataList) #just once
      #RunExcludeModel(BallDataList)
-     #pass red[32, 1, 7, 9, 12, 17, 18, 24, 29],blue:[17, 7]
