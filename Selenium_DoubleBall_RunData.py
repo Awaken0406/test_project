@@ -126,14 +126,17 @@ if __name__ == "__main__":
     file = open('./OutPut/RunData.txt', "a",encoding="utf-8") 
     current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     if(IsString == True):
-               file.write(f'random string:{current_time_str}\n')
+               file.write(f'string string string:{current_time_str}\n')
     else:
-               file.write(f'random number:{current_time_str}\n')
+               file.write(f'number number number:{current_time_str}\n')
     index = 0
     strinfo =''
+    redindexList = []
+    blueIndexList = []
     for k,v in redIndexCountMap.items():
           index+=1
           strinfo += f'red index:{k},count:{v}   '
+          redindexList.append(k)
           if (index % 5) == 0 :
                     print(strinfo)
                     file.write(f'{strinfo}\n')
@@ -146,12 +149,21 @@ if __name__ == "__main__":
     for k,v in blueIndexCountMap.items():
           index+=1
           strinfo += f'blue index:{k},count:{v}   '
+          blueIndexList.append(k)
           if (index % 5) == 0 :
                     print(strinfo)
                     file.write(f'{strinfo}\n')
                     strinfo = ''
     print(strinfo)
     file.write(f'{strinfo}\n')
+    print('-----------------------')
+    file.write('-----------------------\n')
+    resultStr = f'{redindexList} -- {blueIndexList}'
+    print(resultStr)
+    file.write(f'{resultStr}\n')
+    print('-----------------------')
+    file.write('-----------------------\n')
+
     file.write("\n")
     file.close()
 
