@@ -105,19 +105,19 @@ if __name__ == "__main__":
 
    
     #Test Recommend
-    recommendCount = 10000
-    times = 10
+    recommendCount = 100000
+    loopTimes = 10
     G_exRed = 0
     G_exBlue = 0
     G_GroupCount = 100
     G_cost = CulcComb(6+G_exRed,1+G_exBlue)*2
     allTotalMoney = 0
     alltotalCost = 0
-    IsString = True
+    IsString = False
 
     redIndexCountMap =  defaultdict(int)
     blueIndexCountMap =  defaultdict(int)
-    for i in range(times):
+    for i in range(loopTimes):
        TextEx(recommendCount,BallDataList,redIndexCountMap,blueIndexCountMap)
        print('loop times:',i+1)
 
@@ -126,9 +126,13 @@ if __name__ == "__main__":
     file = open('./OutPut/RunData.txt', "a",encoding="utf-8") 
     current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     if(IsString == True):
-               file.write(f'string string string:{current_time_str}\n')
+               info = f'string string string:{current_time_str},IsString:{IsString},loopTimes:{loopTimes},recommendCount:{recommendCount},G_GroupCount:{G_GroupCount}\n'
+               file.write(info)
+               print(info,end='')
     else:
-               file.write(f'number number number:{current_time_str}\n')
+               info = f'number number number:{current_time_str},IsString:{IsString},loopTimes:{loopTimes},recommendCount:{recommendCount},G_GroupCount:{G_GroupCount}\n'
+               file.write(info)
+               print(info,end='')
     index = 0
     strinfo =''
     redindexList = []
