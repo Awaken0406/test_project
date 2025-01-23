@@ -375,12 +375,19 @@ def Doit(fileName):
      BlueMap = dict(sorted(BlueMap.items(), key=lambda x: x[1], reverse=True))
      current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
      file = open(fileName, "a",encoding="utf-8") 
+
      if(IsString == True):
-               info = f'random string:{current_time_str},IsString:{IsString},loopTimes:{loopTimes},recommendCount:{recommendCount}\n'
+          redList = redStringList
+          blueList = blueStringList
+     else:
+          redList = redNumberList
+          blueList = blueNumberList
+     if(IsString == True):
+               info = f'string string string:{current_time_str},IsString:{IsString},loopTimes:{loopTimes},recommendCount:{recommendCount},red index:{redList},blue index:{blueList}\n'
                file.write(info)
                print(info,end='')
      else:
-               info = f'random number:{current_time_str},IsString:{IsString},loopTimes:{loopTimes},recommendCount:{recommendCount}\n'
+               info = f'number number number:{current_time_str},IsString:{IsString},loopTimes:{loopTimes},recommendCount:{recommendCount},red index:{redList},blue index:{blueList}\n'
                file.write(info)
                print(info,end='')
 
@@ -416,12 +423,7 @@ def Doit(fileName):
     
      print('筛选:')
      file.write("筛选:\n")
-     if(IsString == True):
-          redList = redStringList
-          blueList = blueStringList
-     else:
-          redList = redNumberList
-          blueList = blueNumberList
+
 
      outRed = []
      outBlue =[]
